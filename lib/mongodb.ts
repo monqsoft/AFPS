@@ -1,16 +1,23 @@
 import mongoose from "mongoose"
+import type { MongoClient } from "mongodb";
 
 const MONGODB_URI = "mongodb+srv://maume:33470534@cluster0.xo0oxrm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
 if (!MONGODB_URI) {
   throw new Error("Please define the MONGODB_URI environment variable inside .env.local")
 }
+interface GlobalMongoose {
+  conn: mongoose.Mongoose | null;
+  promise: Promise<mongoose.Mongoose> | null;
+}
 
-/**
- * Global is used here to maintain a cached connection across hot reloads
- * in development. This prevents connections from growing exponentially
- * during API Route usage.
- */
+declare global {
+  // eslint-disable-next-line no-var
+  var mongoose: GlobalMongoose;
+  // eslint-disable-next-line no-var
+  var _mongoClientPromise: Promise<MongoClient>;
+}
+
 let cached = global.mongoose
 
 if (!cached) {

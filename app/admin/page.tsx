@@ -56,7 +56,7 @@ async function AuthorizedCpfList() {
                     </Badge>
                   </TableCell>
                   <TableCell>{player.role || "Não Definido"}</TableCell>
-                  <TableCell>{new Date(player.createdAt).toLocaleDateString("pt-BR")}</TableCell>
+                  <TableCell>{player.createdAt ? new Date(player.createdAt).toLocaleDateString("pt-BR") : ""}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

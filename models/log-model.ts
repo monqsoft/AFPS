@@ -1,3 +1,4 @@
+import dbConnect from "@/lib/mongodb"
 import mongoose, { Schema, type Document, models, type Model } from "mongoose"
 
 export interface ILog extends Document {

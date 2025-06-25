@@ -12,7 +12,7 @@ interface SessionData {
 export async function createSession(player: IPlayer) {
   const sessionData: SessionData = {
     cpf: player.cpf,
-    role: player.role,
+    role: player.role ?? "jogador",
     nome: player.nome,
   }
   const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days

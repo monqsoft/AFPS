@@ -17,6 +17,7 @@ export interface IPlayer extends Document {
   golsMarcados?: number
   isAuthorized: boolean // Flag to mark if CPF is in the authorized list
   registrationCompleted: boolean // Flag to mark if full registration is done
+  createdAt?: Date // Automatically managed by Mongoose
 }
 
 const PlayerSchema: Schema<IPlayer> = new Schema(

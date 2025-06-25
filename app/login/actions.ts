@@ -1,7 +1,7 @@
 "use server"
 import dbConnect from "@/lib/mongodb"
 import Player, { type IPlayer } from "@/models/player-model"
-import { createSession, clearSession } from "@/lib/auth"
+import { createSession, clearSession, getSession } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { createLog } from "@/models/log-model"
 
@@ -32,7 +32,7 @@ export async function loginAction(prevState: LoginFormState | undefined, formDat
     // For now, any player found is considered "authorized"
     // The "status" field will differentiate between fully registered and just authorized
     await createSession(player)
-    await createLog("Login bem-sucedido", player.cpf, player.role, { nome: player.nome })
+    await createLog("Login bem-sucedido", player.cpf, player.role || "jogador", { nome: player.nome })
 
     if (player.status === "autorizado_nao_cadastrado") {
       // TODO: redirect('/cadastro'); // Implement cadastro page later
