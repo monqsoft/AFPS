@@ -16,7 +16,7 @@ const fontSans = FontSans({
 export const metadata: Metadata = {
   title: "AFPS - Associação de Futebol de Porto dos Santos",
   description: "Sistema Gerencial da AFPS",
-    generator: 'v0.dev'
+  generator: "v0.dev",
 }
 
 export default async function RootLayout({
