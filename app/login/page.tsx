@@ -1,5 +1,6 @@
+"use client"
 import Image from "next/image"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
@@ -14,12 +15,13 @@ import {
   Newspaper,
   MessageSquare,
 } from "lucide-react"
-import LoginForm from "@/components/login-form" // Import the new client component
+import LoginForm from "@/components/login-form"
 
-// Placeholder for dynamic data, e.g., player count
-const playerCount = "150+" // Replace 'X' with a more specific number if available or fetch dynamically
+const playerCount = "150+"
 
 export default function LoginPage() {
+  const router = useRouter()
+
   const bentoGridItems = [
     {
       title: "Localização",
@@ -29,7 +31,7 @@ export default function LoginPage() {
       className: "md:col-span-2 bg-background text-foreground",
       content: (
         <div className="mt-2 h-40 rounded-md bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-          <p className="text-muted-foreground text-sm">🗺️ Mapa Interativo Aqui</p>
+          <p className="text-lg text-muted-foreground/70">🗺️ Mapa Interativo Aqui</p>
         </div>
       ),
     },
@@ -59,14 +61,13 @@ export default function LoginPage() {
       icon: <Newspaper className="h-8 w-8 text-primary" />,
       className: "md:col-span-2 bg-primary text-primary-foreground",
       content: (
-        <Link href="/cadastro" legacyBehavior passHref>
-          <Button 
-            size="lg"
-            className="mt-4 w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground text-lg py-3"
-          >
-            Inscreva-se Agora
-          </Button>
-        </Link>
+        <Button
+          size="lg"
+          className="mt-4 w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground text-lg py-3"
+          onClick={() => router.push("/cadastro")}
+        >
+          Inscreva-se Agora
+        </Button>
       ),
     },
     {
@@ -81,15 +82,15 @@ export default function LoginPage() {
       className: "bg-background text-foreground",
       content: (
         <div className="flex justify-around items-center mt-4">
-          <Link href="#" aria-label="Facebook AFPS" target="_blank" rel="noopener noreferrer">
+          <a href="#" aria-label="Facebook AFPS" target="_blank" rel="noopener noreferrer">
             <Facebook className="h-8 w-8 text-primary hover:text-primary/80 transition-colors" />
-          </Link>
-          <Link href="#" aria-label="Twitter AFPS" target="_blank" rel="noopener noreferrer">
+          </a>
+          <a href="#" aria-label="Twitter AFPS" target="_blank" rel="noopener noreferrer">
             <Twitter className="h-8 w-8 text-primary hover:text-primary/80 transition-colors" />
-          </Link>
-          <Link href="#" aria-label="Instagram AFPS" target="_blank" rel="noopener noreferrer">
+          </a>
+          <a href="#" aria-label="Instagram AFPS" target="_blank" rel="noopener noreferrer">
             <Instagram className="h-8 w-8 text-primary hover:text-primary/80 transition-colors" />
-          </Link>
+          </a>
         </div>
       ),
     },
@@ -114,12 +115,10 @@ export default function LoginPage() {
       </header>
 
       <main className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-[minmax(180px,_auto)]">
-        {/* Login Form Card - Spans 1 column, potentially more height */}
         <div className="lg:col-span-1 md:row-span-2 h-full min-h-[380px] md:min-h-[calc(2*180px+1.5rem)]">
           <LoginForm />
         </div>
 
-        {/* Bento Grid Info Cards */}
         {bentoGridItems.map((item, index) => (
           <Card
             key={index}
@@ -151,7 +150,7 @@ export default function LoginPage() {
 
       <footer className="text-center mt-12 py-6 text-background/70 text-sm">
         <p>
-          &copy; {new Date().getFullYear()} Associação de Futebol de Porto dos Santos. Todos os direitos reservados.
+          © {new Date().getFullYear()} Associação de Futebol de Porto dos Santos. Todos os direitos reservados.
         </p>
         <p>Desenvolvido com ⚽ e paixão.</p>
       </footer>

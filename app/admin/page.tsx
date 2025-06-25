@@ -4,13 +4,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import dbConnect from "@/lib/mongodb"
 import Player, { type IPlayer } from "@/models/player-model"
+import { getAppConfig } from "@/models/config-model"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Trash2 } from "lucide-react"
+import AddAuthorizedCpfForm from "@/components/add-authorized-cpf-form"
+import ConfigMensalidadeForm from "@/components/config-mensalidade-form"
+import LogsTable from "@/components/logs-table"
+import { removeAuthorizedCpfAction } from "./actions"
 
+// Server component to display list and handle remove action via a form
 async function AuthorizedCpfList() {
   await dbConnect()
-  // Fetch players who are authorized but not fully registered, or all players for a general list
   const authorizedPlayers = (await Player.find({ isAuthorized: true }).sort({ createdAt: -1 }).lean()) as IPlayer[]
 
   return (
@@ -29,12 +36,13 @@ async function AuthorizedCpfList() {
                 <TableHead>Status Cadastro</TableHead>
                 <TableHead>Perfil</TableHead>
                 <TableHead>Autorizado em</TableHead>
+                <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {authorizedPlayers.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center">
+                  <TableCell colSpan={6} className="text-center">
                     Nenhum CPF autorizado encontrado.
                   </TableCell>
                 </TableRow>
@@ -57,12 +65,24 @@ async function AuthorizedCpfList() {
                   </TableCell>
                   <TableCell>{player.role || "Não Definido"}</TableCell>
                   <TableCell>{player.createdAt ? new Date(player.createdAt).toLocaleDateString("pt-BR") : ""}</TableCell>
+                  <TableCell>
+                    {!player.registrationCompleted && (
+                      <form action={async (formData: FormData) => {
+                        const cpf = formData.get("cpf") as string
+                        await removeAuthorizedCpfAction(cpf)
+                      }}>
+                        <input type="hidden" name="cpf" value={player.cpf} />
+                        <Button variant="destructive" size="sm" type="submit" title="Remover Autorização">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </form>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </ScrollArea>
-        {/* TODO: Add FormularioAdicionarCPF component here */}
       </CardContent>
     </Card>
   )
@@ -72,8 +92,10 @@ export default async function AdminDashboardPage() {
   const session = await getSession()
 
   if (!session || session.role !== "admin") {
-    redirect("/login") // Or an unauthorized page
+    redirect("/login")
   }
+
+  const config = await getAppConfig() // Fetch current config for mensalidade
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -88,39 +110,24 @@ export default async function AdminDashboardPage() {
         </TabsList>
 
         <TabsContent value="jogadores">
-          <Card>
-            <CardHeader>
-              <CardTitle>Gerenciar Jogadores</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>Em desenvolvimento: Listagem, filtros, edição de jogadores, etc.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="cpfs">
           <AuthorizedCpfList />
-          {/* <GerenciadorRoles /> */}
         </TabsContent>
-
+        <TabsContent value="cpfs">
+          <AddAuthorizedCpfForm />
+        </TabsContent>
         <TabsContent value="mensalidade">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configurar Mensalidade</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>Em desenvolvimento: Definir valor da mensalidade.</p>
-            </CardContent>
-          </Card>
+          <ConfigMensalidadeForm currentValor={config.valorMensalidade} />
         </TabsContent>
 
         <TabsContent value="logs">
           <Card>
             <CardHeader>
               <CardTitle>Logs e Auditoria</CardTitle>
+              <CardDescription>Visualizar logs de atividades importantes do sistema.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Em desenvolvimento: Visualizar logs do sistema.</p>
+              <LogsTable />
+              {/* Placeholder for <FiltroLogs /> */}
             </CardContent>
           </Card>
         </TabsContent>
@@ -129,9 +136,11 @@ export default async function AdminDashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle>Gerenciar Despesas da Comissão</CardTitle>
+              <CardDescription>Adicionar, editar e visualizar despesas. Gerar relatórios financeiros.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Em desenvolvimento: Adicionar, editar despesas, visualizar gráficos.</p>
+              <p className="text-muted-foreground">🚧 Em desenvolvimento: Formulário de despesa, tabela e gráficos.</p>
+              {/* Placeholder for <FormularioDespesa />, <TabelaDespesas />, <GraficoDespesasMensais /> */}
             </CardContent>
           </Card>
         </TabsContent>

@@ -8,8 +8,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Image from "next/image"
 import { useEffect } from "react"
 import { useToast } from "@/components/ui/use-toast"
-import { useRouter } from "next/navigation" // For redirection
-import RegistrationStepper from "@/components/registration-stepper" // Import the stepper
+import { useRouter } from "next/navigation"
+import RegistrationStepper from "@/components/registration-stepper"
 
 const initialState: CpfCheckState = {
   success: false,
@@ -34,8 +34,7 @@ export default function CadastroPage() {
   const router = useRouter()
 
   useEffect(() => {
-    if (state?.message && !state.isAuthorized) {
-      // Show toast only for errors or specific messages
+    if (state?.message) {
       toast({
         title: state.success ? "Aviso" : "Erro na Verificação",
         description: state.message,
@@ -43,15 +42,13 @@ export default function CadastroPage() {
       })
     }
     if (state?.isAuthorized && state.isRegistered) {
-      // If authorized and already fully registered, redirect to login
-      // The message "Este CPF já possui cadastro completo. Tente fazer login." will be shown by toast.
-      // Optionally, redirect after a delay or let user click to login.
-      // router.push("/login");
+      console.log("Usuário já registrado e autorizado, redirecionando para o login.", state && state);
+
+      setTimeout(() => router.push("/login"), 2000) // Redirect to login after showing message
     }
   }, [state, toast, router])
 
   if (state?.success && state.isAuthorized && !state.isRegistered && state.cpf) {
-    // CPF is authorized and not yet fully registered, show the stepper
     return (
       <div className="container mx-auto py-8 px-4 min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-secondary">
         <Image src="/logo-afps.png" alt="AFPS Logo" width={100} height={100} className="mb-6" />

@@ -1,6 +1,5 @@
 "use client"
-
-import {  useFormStatus } from "react-dom" // Changed from useFormState to useActionState
+import { useFormStatus } from "react-dom"
 import { loginAction, type LoginFormState } from "@/app/login/actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,6 +9,7 @@ import Image from "next/image"
 import { useActionState, useEffect } from "react"
 import { useToast } from "@/components/ui/use-toast"
 import { LogIn } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 const initialState: LoginFormState = {
   message: null,
@@ -39,8 +39,9 @@ function SubmitButton() {
 }
 
 export default function LoginForm() {
-  const [state, formAction] = useActionState(loginAction, initialState) // Changed from useFormState to useActionState
+  const [state, formAction] = useActionState(loginAction, initialState)
   const { toast } = useToast()
+  const router = useRouter()
 
   useEffect(() => {
     if (state?.message && !state.success) {
@@ -50,7 +51,7 @@ export default function LoginForm() {
         variant: "destructive",
       })
     }
-    // No success toast here as redirection handles it.
+    // Redirect is handled server-side, so no client-side redirect needed here
   }, [state, toast])
 
   return (
@@ -78,7 +79,7 @@ export default function LoginForm() {
               aria-describedby="cpf-error"
             />
             {state?.message && !state.success && (
-              <p id="cpf-error" className="text-sm text-red-400 pt-1"> {/* Fixed typo: cpf-error instead of id="cpf-error" */}
+              <p id="cpf-error" className="text-sm text-red-400 pt-1">
                 {state.message}
               </p>
             )}
