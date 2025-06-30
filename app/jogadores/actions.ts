@@ -5,6 +5,7 @@ import Player, { type IPlayer } from "@/models/player-model"
 import { createLog } from "@/models/log-model"
 import { QrCodePix } from "qrcode-pix" // Ensure this lib is compatible with Next.js Edge/Serverless if applicable
 import { ROLES } from "@/lib/roles"
+import { logger } from "@/lib/logger"
 
 export interface PixData {
   payload: string // Copia e Cola
@@ -70,7 +71,7 @@ export async function generatePixPayment(jogadorCpf: string): Promise<PixGenerat
       },
     }
   } catch (error) {
-    console.error("PIX Generation Error:", error)
+    logger.error("PIX Generation Error:", { error });
     await createLog("Erro na geração de PIX", jogadorCpf, "system", { erro: (error as Error).message })
     return { error: "Erro ao gerar PIX. Tente novamente." }
   }

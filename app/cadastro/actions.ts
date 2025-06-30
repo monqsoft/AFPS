@@ -4,8 +4,10 @@ import Player, { type IPlayer } from "@/models/player-model"
 import { createLog } from "@/models/log-model"
 import { z } from "zod"
 import { ROLES } from "@/lib/roles"
+import { isValidCpf } from "@/lib/utils"
+import { logger } from "@/lib/logger"
 
-const CpfSchema = z.string().regex(/^\d{11}$/, "CPF deve conter 11 números.")
+const CpfSchema = z.string().regex(/^\d{11}$/, "CPF deve conter 11 números.").refine(isValidCpf, "CPF inválido.")
 
 export interface CpfCheckState {
   message?: string
@@ -49,7 +51,7 @@ export async function checkCpfAuthorization(
       return { success: false, message: "CPF não autorizado para cadastro. Entre em contato com a administração." }
     }
   } catch (error) {
-    console.error("CPF Check Error:", error)
+    logger.error("CPF Check Error:", { error: error as Error })
     await createLog("Erro na verificação de CPF para cadastro", cleanedCpf, "system", {
       error: (error as Error).message,
     })
@@ -119,7 +121,10 @@ export async function submitRegistrationStep(
       // Security: Ensure only pre-approved admins can select 'admin' role, or default to 'jogador'
       // For now, let's assume the UI restricts this or it's a simplified setup.
       // In a real app, check if this CPF was pre-authorized for admin role.
-      player.role = validated.data.role
+      // Only allow roles that are valid for the Player model
+      player.role = validated.data.role === ROLES.JOGADOR || validated.data.role === ROLES.ADMIN
+        ? validated.data.role
+        : ROLES.JOGADOR
       player.status = "ativo"
       player.registrationCompleted = true
       await createLog("Cadastro finalizado", cpf, player.role || ROLES.JOGADOR, { nome: player.nome })
@@ -127,7 +132,7 @@ export async function submitRegistrationStep(
     await player.save()
     return { success: true }
   } catch (error: any) {
-    console.error(`Registration Step ${step} Error:`, error)
+    logger.error(`Registration Step ${step} Error:`, { error });
     await createLog(`Erro no passo ${step} do cadastro`, cpf, "system", { error: error.message })
     if (error.code === 11000) {
       // Duplicate key error (e.g. email if unique)

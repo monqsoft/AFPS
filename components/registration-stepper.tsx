@@ -11,6 +11,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { submitRegistrationStep } from "@/app/cadastro/actions"
 import { Loader2, User, Phone, ShieldCheck, CheckCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
+import InputMask from "react-input-mask"
 
 interface RegistrationStepperProps {
   cpf: string
@@ -120,14 +121,22 @@ export default function RegistrationStepper({ cpf }: RegistrationStepperProps) {
           <>
             <div>
               <Label htmlFor="telefone">Telefone (Opcional)</Label>
-              <Input
-                id="telefone"
-                name="telefone"
-                type="tel"
-                placeholder="(XX) XXXXX-XXXX"
+              <InputMask
+                mask="(99) 99999-9999"
                 value={formData.telefone || ""}
                 onChange={handleChange}
-              />
+                maskChar="_"
+              >
+                {(inputProps: any) => (
+                  <Input
+                    {...inputProps}
+                    id="telefone"
+                    name="telefone"
+                    type="tel"
+                    placeholder="(XX) XXXXX-XXXX"
+                  />
+                )}
+              </InputMask>
               {errors.telefone && <p className="text-sm text-destructive mt-1">{errors.telefone[0]}</p>}
             </div>
             <div>

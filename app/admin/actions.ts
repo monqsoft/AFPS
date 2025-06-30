@@ -8,6 +8,7 @@ import { getSession } from "@/lib/auth"
 import { z } from "zod"
 import { revalidatePath } from "next/cache"
 import { ROLES } from "@/lib/roles"
+import { logger } from "@/lib/logger"
 
 // Schema for adding an authorized CPF
 const AddAuthorizedCpfSchema = z.object({
@@ -83,7 +84,7 @@ export async function addAuthorizedCpfAction(
       return { success: true, message: `CPF ${cpf} autorizado com sucesso e aguardando cadastro.` }
     }
   } catch (error: any) {
-    console.error("Add Authorized CPF Error:", error)
+    logger.error("Add Authorized CPF Error:", { error })
     await createLog("Erro ao autorizar CPF", session.cpf, "admin", { cpf, error: error.message })
     return { success: false, errors: { general: "Erro ao salvar no banco de dados. Tente novamente." } }
   }
@@ -131,17 +132,22 @@ export async function removeAuthorizedCpfAction(cpfToRemove: string) {
       return { success: false, message: "CPF não encontrado." }
     }
     if (player.registrationCompleted) {
-      // Decide policy: disallow removal, or mark as unauthorized and inactive?
-      // For now, let's just prevent removal of registered users this way.
-      // They should be inactivated via player management.
-      return { success: false, message: "Não é possível remover CPF de usuário já cadastrado. Inative o jogador." }
+      // If player is already registered, inactivate them instead of deleting
+      player.isAuthorized = false;
+      player.status = "inativo";
+      await player.save();
+      await createLog("Jogador Inativado (Autorização Removida)", session.cpf, ROLES.ADMIN, { cpfInativado: cpfToRemove, nome: player.nome });
+      revalidatePath("/admin");
+      return { success: true, message: `Jogador ${cpfToRemove} inativado e autorização removida.` };
+    } else {
+      // If player is not registered, delete the record
+      await Player.deleteOne({ cpf: cpfToRemove });
+      await createLog("CPF Autorizado Removido (Não Cadastrado)", session.cpf, ROLES.ADMIN, { cpfRemovido: cpfToRemove });
+      revalidatePath("/admin");
+      return { success: true, message: `Autorização para CPF ${cpfToRemove} removida.` };
     }
-    await Player.deleteOne({ cpf: cpfToRemove })
-    await createLog("CPF Autorizado Removido", session.cpf, "admin", { cpfRemovido: cpfToRemove })
-    revalidatePath("/admin")
-    return { success: true, message: `Autorização para CPF ${cpfToRemove} removida.` }
   } catch (error: any) {
-    console.error("Remove Authorized CPF Error:", error)
+    logger.error("Remove Authorized CPF Error:", { error });
     await createLog("Erro ao remover autorização de CPF", session.cpf, "admin", {
       cpf: cpfToRemove,
       error: error.message,
@@ -175,7 +181,7 @@ export async function updateMensalidadeAction(newValor: number) {
     revalidatePath("/admin")
     return { success: true, message: `Valor da mensalidade atualizado para R$ ${newValor.toFixed(2)}.` }
   } catch (error: any) {
-    console.error("Update Mensalidade Error:", error)
+    logger.error("Update Mensalidade Error:", { error });
     await createLog("Erro ao atualizar mensalidade", session.cpf, "admin", {
       novoValor: newValor,
       error: error.message,

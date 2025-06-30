@@ -3,6 +3,8 @@ import { redirect } from "next/navigation"
 import dbConnect from "@/lib/mongodb"
 import Player, { type IPlayer } from "@/models/player-model"
 import { clearSession, createSession } from "@/lib/auth"
+import { isValidCpf } from "@/lib/utils"
+import { logger } from "@/lib/logger"
 
 export interface LoginFormState {
   message: string | null
@@ -13,7 +15,7 @@ export async function loginAction(_prevState: LoginFormState, formData: FormData
   await dbConnect()
 
   const cpf = formData.get("cpf")?.toString().replace(/\D/g, "")
-  if (!cpf || cpf.length !== 11) {
+  if (!cpf || !isValidCpf(cpf)) {
     return {
       message: "Por favor, insira um CPF válido.",
       success: false,
@@ -39,7 +41,7 @@ export async function loginAction(_prevState: LoginFormState, formData: FormData
     await createSession(player)
     redirect("/dashboard") // Server-side redirect after successful login
   } catch (error) {
-    console.error("Login error:", error)
+    logger.error("Login error:", { error });
     return {
       message: "Ocorreu um erro durante o login. Tente novamente.",
       success: false,

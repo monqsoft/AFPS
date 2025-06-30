@@ -10,6 +10,7 @@ import { useEffect } from "react"
 import { useToast } from "@/components/ui/use-toast"
 import { useRouter } from "next/navigation"
 import RegistrationStepper from "@/components/registration-stepper"
+import InputMask from "react-input-mask"
 
 const initialState: CpfCheckState = {
   success: false,
@@ -73,16 +74,29 @@ export default function CadastroPage() {
               <Label htmlFor="cpf" className="text-lg">
                 CPF
               </Label>
-              <Input
-                id="cpf"
-                name="cpf"
-                type="text"
-                placeholder="000.000.000-00"
-                required
-                className="text-lg p-3"
-                pattern="\d{3}\.?\d{3}\.?\d{3}-?\d{2}"
-                title="Digite um CPF válido no formato XXX.XXX.XXX-XX ou XXXXXXXXXXX"
-              />
+              <InputMask
+                mask="999.999.999-99"
+                value={state.cpf || ""}
+                onChange={(e) => {
+                  const input = e.target as HTMLInputElement;
+                  input.value = input.value.replace(/\D/g, ''); // Remove non-digits for internal state
+                  // No need to update state here, as formAction will handle it
+                }}
+                maskChar="_"
+              >
+                {(inputProps: any) => (
+                  <Input
+                    {...inputProps}
+                    id="cpf"
+                    name="cpf"
+                    type="text"
+                    placeholder="000.000.000-00"
+                    required
+                    className="text-lg p-3"
+                    title="Digite um CPF válido no formato XXX.XXX.XXX-XX ou XXXXXXXXXXX"
+                  />
+                )}
+              </InputMask>
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
