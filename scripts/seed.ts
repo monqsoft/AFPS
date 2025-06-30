@@ -4,7 +4,7 @@ import mongoose from "mongoose"
 import Player from "../models/player-model" // Adjust path as needed
 import Config from "../models/config-model" // Adjust path
 
-const MONGODB_URI = "mongodb+srv://maume:33470534@cluster0.xo0oxrm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+const MONGODB_URI = process.env.MONGODB_URI!
 
 async function seedDatabase() {
   console.log("Connecting to MongoDB...")
