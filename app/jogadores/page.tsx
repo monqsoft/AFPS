@@ -57,7 +57,7 @@ export default async function JogadoresPage() {
                         {player.registrationCompleted ? "Completo" : "Pendente"}
                       </Badge>
                     </TableCell>
-                    <TableCell>{player.role || "Jogador"}</TableCell>
+                    <TableCell>{player.role}</TableCell>
                     <TableCell>{player.createdAt ? new Date(player.createdAt).toLocaleDateString("pt-BR") : ""}</TableCell>
                   </TableRow>
                 ))}

@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
 import { Loader2, PlusCircle } from "lucide-react"
+import { ROLES } from "@/lib/roles"
 
 const initialState: AddAuthorizedCpfState = {
   success: false,
@@ -87,8 +88,10 @@ export default function AddAuthorizedCpfForm() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="default">Padrão (Jogador após cadastro)</SelectItem>
-                <SelectItem value="jogador">Jogador</SelectItem>
-                <SelectItem value="admin">Administrador</SelectItem>
+                <SelectItem value={ROLES.JOGADOR}>Jogador</SelectItem> 
+                <SelectItem value={ROLES.ADMIN}>Administrador</SelectItem>
+                <SelectItem value={ROLES.ARBITRO}>Árbitro</SelectItem>
+                <SelectItem value={ROLES.COMISSAO}>Comissão</SelectItem>
               </SelectContent>
             </Select>
             {state?.errors?.roleInicial && (

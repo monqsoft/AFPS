@@ -82,15 +82,7 @@ export default function LoginPage() {
       className: "bg-background text-foreground",
       content: (
         <div className="flex justify-around items-center mt-4">
-          <a href="#" aria-label="Facebook AFPS" target="_blank" rel="noopener noreferrer">
-            <Facebook className="h-8 w-8 text-primary hover:text-primary/80 transition-colors" />
-          </a>
-          <a href="#" aria-label="Twitter AFPS" target="_blank" rel="noopener noreferrer">
-            <Twitter className="h-8 w-8 text-primary hover:text-primary/80 transition-colors" />
-          </a>
-          <a href="#" aria-label="Instagram AFPS" target="_blank" rel="noopener noreferrer">
-            <Instagram className="h-8 w-8 text-primary hover:text-primary/80 transition-colors" />
-          </a>
+          {/* Social media links removed as they were placeholders */}
         </div>
       ),
     },

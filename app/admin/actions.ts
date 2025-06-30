@@ -7,12 +7,13 @@ import Log, { createLog } from "@/models/log-model"
 import { getSession } from "@/lib/auth"
 import { z } from "zod"
 import { revalidatePath } from "next/cache"
+import { ROLES } from "@/lib/roles"
 
 // Schema for adding an authorized CPF
 const AddAuthorizedCpfSchema = z.object({
   cpf: z.string().regex(/^\d{11}$/, "CPF deve conter 11 números."),
   nomeInicial: z.string().min(2, "Nome inicial muito curto").optional().or(z.literal("")),
-  roleInicial: z.enum(["jogador", "admin", ""]).optional(),
+  roleInicial: z.enum([ROLES.JOGADOR, ROLES.ADMIN, ROLES.ARBITRO, ROLES.COMISSAO, ""]).optional(),
 })
 
 export interface AddAuthorizedCpfState {
@@ -31,7 +32,7 @@ export async function addAuthorizedCpfAction(
   formData: FormData,
 ): Promise<AddAuthorizedCpfState> {
   const session = await getSession()
-  if (!session || session.role !== "admin") {
+  if (!session || session.role !== ROLES.ADMIN) {
     return { success: false, message: "Não autorizado." }
   }
 
@@ -62,7 +63,7 @@ export async function addAuthorizedCpfAction(
       player.status = "autorizado_nao_cadastrado"
       player.registrationCompleted = false
       player.nome = nomeInicial || player.nome || "Pendente Cadastro (Re-autorizado)"
-      player.role = (roleInicial as "jogador" | "admin" | null) || player.role || null
+      player.role = (roleInicial as typeof ROLES.JOGADOR | typeof ROLES.ADMIN | null) || player.role || null
       await player.save()
       await createLog("CPF Re-autorizado", session.cpf, "admin", { cpfAutorizado: cpf, nome: player.nome })
       revalidatePath("/admin") // Revalidate to update the list
@@ -73,7 +74,7 @@ export async function addAuthorizedCpfAction(
         cpf,
         isAuthorized: true,
         status: "autorizado_nao_cadastrado",
-        role: (roleInicial as "jogador" | "admin" | null) || null,
+        role: (roleInicial as typeof ROLES.JOGADOR | typeof ROLES.ADMIN | null) || null,
         nome: nomeInicial || "Pendente Cadastro (Autorizado)",
         registrationCompleted: false,
       })
@@ -120,7 +121,7 @@ export async function updatePlayerRoleAction(playerId: string, newRole: string) 
 }
 export async function removeAuthorizedCpfAction(cpfToRemove: string) {
   const session = await getSession()
-  if (!session || session.role !== "admin") {
+  if (!session || session.role !== ROLES.ADMIN) {
     return { success: false, message: "Não autorizado." }
   }
   try {
@@ -152,7 +153,7 @@ export async function removeAuthorizedCpfAction(cpfToRemove: string) {
 // Mensalidade
 export async function updateMensalidadeAction(newValor: number) {
   const session = await getSession()
-  if (!session || session.role !== "admin") {
+  if (!session || session.role !== ROLES.ADMIN) {
     return { success: false, message: "Não autorizado." }
   }
   if (isNaN(newValor) || newValor <= 0) {
@@ -188,7 +189,7 @@ export async function fetchLogsAction(filters: any) {
   /* TODO: Implement logic */
   console.log("fetchLogsAction called with filters:", filters)
   const session = await getSession()
-  if (!session || session.role !== "admin") {
+  if (!session || session.role !== ROLES.ADMIN) {
     return { success: false, message: "Não autorizado.", logs: [] }
   }
   try {

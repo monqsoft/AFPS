@@ -4,6 +4,7 @@ import { getAppConfig } from "@/models/config-model"
 import Player, { type IPlayer } from "@/models/player-model"
 import { createLog } from "@/models/log-model"
 import { QrCodePix } from "qrcode-pix" // Ensure this lib is compatible with Next.js Edge/Serverless if applicable
+import { ROLES } from "@/lib/roles"
 
 export interface PixData {
   payload: string // Copia e Cola
@@ -54,7 +55,7 @@ export async function generatePixPayment(jogadorCpf: string): Promise<PixGenerat
     const payload = pix.payload()
     const qrCodeBase64 = await pix.base64() // Returns data:image/png;base64,...
 
-    await createLog("Geração de PIX", jogadorCpf, player.role || "jogador", {
+    await createLog("Geração de PIX", jogadorCpf, player.role || ROLES.JOGADOR, {
       valor: config.valorMensalidade,
       descricao: descricaoPix,
     })

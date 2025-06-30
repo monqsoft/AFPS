@@ -3,6 +3,7 @@ import dbConnect from "@/lib/mongodb"
 import Player, { type IPlayer } from "@/models/player-model"
 import { createLog } from "@/models/log-model"
 import { z } from "zod"
+import { ROLES } from "@/lib/roles"
 
 const CpfSchema = z.string().regex(/^\d{11}$/, "CPF deve conter 11 números.")
 
@@ -83,7 +84,7 @@ const ContactInfoSchema = z.object({
 
 const FinalizationSchema = z.object({
   cpf: CpfSchema,
-  role: z.enum(["jogador", "admin"], { errorMap: () => ({ message: "Selecione um perfil." }) }),
+  role: z.enum([ROLES.JOGADOR, ROLES.ADMIN, ROLES.ARBITRO, ROLES.COMISSAO], { errorMap: () => ({ message: "Selecione um perfil." }) }),
 })
 
 export async function submitRegistrationStep(
@@ -121,7 +122,7 @@ export async function submitRegistrationStep(
       player.role = validated.data.role
       player.status = "ativo"
       player.registrationCompleted = true
-      await createLog("Cadastro finalizado", cpf, player.role || "jogador", { nome: player.nome })
+      await createLog("Cadastro finalizado", cpf, player.role || ROLES.JOGADOR, { nome: player.nome })
     }
     await player.save()
     return { success: true }

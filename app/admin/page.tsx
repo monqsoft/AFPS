@@ -14,6 +14,7 @@ import AddAuthorizedCpfForm from "@/components/add-authorized-cpf-form"
 import ConfigMensalidadeForm from "@/components/config-mensalidade-form"
 import LogsTable from "@/components/logs-table"
 import { removeAuthorizedCpfAction } from "./actions"
+import { ROLES } from "@/lib/roles"
 
 // Server component to display list and handle remove action via a form
 async function AuthorizedCpfList() {
@@ -63,7 +64,7 @@ async function AuthorizedCpfList() {
                           : player.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>{player.role || "Não Definido"}</TableCell>
+                  <TableCell>{player.role}</TableCell>
                   <TableCell>{player.createdAt ? new Date(player.createdAt).toLocaleDateString("pt-BR") : ""}</TableCell>
                   <TableCell>
                     {!player.registrationCompleted && (
@@ -91,7 +92,7 @@ async function AuthorizedCpfList() {
 export default async function AdminDashboardPage() {
   const session = await getSession()
 
-  if (!session || session.role !== "admin") {
+  if (!session || session.role !== ROLES.ADMIN) {
     redirect("/login")
   }
 
@@ -110,10 +111,21 @@ export default async function AdminDashboardPage() {
         </TabsList>
 
         <TabsContent value="jogadores">
-          <AuthorizedCpfList />
+          <Card>
+            <CardHeader>
+              <CardTitle>Gerenciamento de Jogadores</CardTitle>
+              <CardDescription>Funcionalidades para gerenciar dados e estatísticas dos jogadores.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">🚧 Em desenvolvimento: Tabela de jogadores, formulários de edição, etc.</p>
+            </CardContent>
+          </Card>
         </TabsContent>
         <TabsContent value="cpfs">
           <AddAuthorizedCpfForm />
+          <div className="mt-6">
+            <AuthorizedCpfList />
+          </div>
         </TabsContent>
         <TabsContent value="mensalidade">
           <ConfigMensalidadeForm currentValor={config.valorMensalidade} />

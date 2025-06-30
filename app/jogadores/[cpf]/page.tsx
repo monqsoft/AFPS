@@ -5,6 +5,7 @@ import Player, { type IPlayer } from "@/models/player-model"
 import PixPaymentCard from "@/components/pix-payment-card"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { UserCircle, ShieldCheck, Hash, Mail, Phone, CalendarDays, Shirt } from "lucide-react"
+import { ROLES } from "@/lib/roles"
 
 export default async function JogadorProfilePage({ params }: { params: { cpf: string } }) {
   const session = await getSession()
@@ -40,7 +41,7 @@ export default async function JogadorProfilePage({ params }: { params: { cpf: st
                 {viewedPlayer.nome} {viewedPlayer.apelido && `(${viewedPlayer.apelido})`}
               </CardTitle>
               <CardDescription className="text-lg">
-                {viewedPlayer.role === "admin" ? "Administrador" : "Jogador"} - Status:{" "}
+                {viewedPlayer.role} - Status:{" "}
                 <span
                   className={`font-semibold ${viewedPlayer.status === "ativo" ? "text-green-600" : "text-red-600"}`}
                 >
@@ -88,10 +89,10 @@ export default async function JogadorProfilePage({ params }: { params: { cpf: st
       </Card>
 
       {/* PIX Payment Card - only for player viewing their own profile */}
-      {isOwnProfile && viewedPlayer.role === "jogador" && <PixPaymentCard jogadorCpf={viewedPlayer.cpf} />}
+      {isOwnProfile && viewedPlayer.role === ROLES.JOGADOR && <PixPaymentCard jogadorCpf={viewedPlayer.cpf} />}
 
       {/* Placeholder for other player-specific info (stats, payments, etc.) */}
-      {isOwnProfile && viewedPlayer.role === "jogador" && (
+      {isOwnProfile && viewedPlayer.role === ROLES.JOGADOR && (
         <Card className="mt-8">
           <CardHeader>
             <CardTitle>Minhas Estatísticas e Pagamentos</CardTitle>

@@ -1,19 +1,20 @@
 // lib/auth.ts
 import type { IPlayer } from "@/models/player-model"
 import { cookies } from "next/headers"
+import { Role, ROLES } from "./roles"
 
 const SESSION_COOKIE_NAME = "afps_session"
 
 interface SessionData {
   cpf: string
-  role: "jogador" | "admin"
+  role: Role
   nome: string
 }
 
 export async function createSession(player: IPlayer) {
   const sessionData: SessionData = {
     cpf: player.cpf,
-    role: player.role ?? "jogador",
+    role: player.role ?? ROLES.JOGADOR,
     nome: player.nome,
   }
   const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
