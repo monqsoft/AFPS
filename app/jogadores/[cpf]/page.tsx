@@ -98,7 +98,20 @@ export default async function JogadorProfilePage({ params }: { params: { cpf: st
             <CardTitle>Minhas Estatísticas e Pagamentos</CardTitle>
           </CardHeader>
           <CardContent>
-            <p>📊 Em breve: histórico de mensalidades, cartões, gols...</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Estatísticas</h3>
+                <p>Gols: 0</p>
+                <p>Assistências: 0</p>
+                <p>Cartões Amarelos: 0</p>
+                <p>Cartões Vermelhos: 0</p>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Histórico de Pagamentos</h3>
+                <p>Último Pagamento: N/A</p>
+                <p>Status da Mensalidade: Em dia</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}

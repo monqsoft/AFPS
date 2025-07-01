@@ -20,7 +20,28 @@ export default async function DashboardPage() {
         <CardContent>
           <p>Seu CPF: {session.cpf}</p>
           <p>Seu Perfil: {session.role }</p>
-          <p className="mt-4 text-lg">⚽️ Em breve, suas estatísticas e informações aqui! 🏃💨</p>
+          <div className="mt-4 space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Estatísticas do Jogador</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>Gols: 0</p>
+                <p>Assistências: 0</p>
+                <p>Cartões Amarelos: 0</p>
+                <p>Cartões Vermelhos: 0</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Histórico de Pagamentos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>Último Pagamento: N/A</p>
+                <p>Status da Mensalidade: Em dia</p>
+              </CardContent>
+            </Card>
+          </div>
           {session.role === ROLES.ADMIN && (
             <div className="mt-6 p-4 bg-secondary/10 rounded-lg">
               <h3 className="text-xl font-semibold text-secondary">Painel do Administrador</h3>

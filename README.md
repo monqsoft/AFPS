@@ -58,8 +58,6 @@ Para executar este projeto localmente, siga os passos abaixo:
 
 ## Estrutura de Dados (Models)
 
-A aplicação utiliza os seguintes modelos de dados no MongoDB:
-
 - **`Player` (`player-model.ts`):** O modelo central da aplicação. Armazena todas as informações dos jogadores, incluindo:
   - Dados pessoais (nome, CPF, nascimento).
   - Status de autorização e de cadastro (`isAuthorized`, `registrationCompleted`).
@@ -109,7 +107,7 @@ O painel administrativo é uma página com abas que centraliza as operações:
 - **Jogadores:** (Funcionalidade a ser implementada) Gerenciamento de dados e estatísticas dos jogadores.
 - **Perfis e Acesso:**
   - Autoriza novos CPFs para cadastro (`AddAuthorizedCpfForm`).
-  - Lista todos os CPFs autorizados e seu status (`AuthorizedCpfList`). A remoção de autorização para CPFs já cadastrados agora inativa o jogador em vez de deletar o registro.
+  - Lista todos os CPFs autorizados e seu status (`AuthorizedCpfList`). A remoção de autorização para CPFs já cadastrados agora inativa o jogador se ele já estiver cadastrado, em vez de deletar o registro.
 - **Mensalidade:**
   - Permite ao admin atualizar o valor da mensalidade (`ConfigMensalidadeForm`), que é salvo no modelo `Config`.
 - **Logs:**
@@ -150,3 +148,7 @@ O painel administrativo é uma página com abas que centraliza as operações:
 - **Logging Centralizado:** Introdução de um utilitário de logging (`lib/logger.ts`) para padronizar o registro de erros e eventos importantes, facilitando a depuração e monitoramento.
 - **Organização de Interfaces:** Criação da pasta `types/` para centralizar e organizar todas as interfaces e tipos TypeScript, evitando duplicação e conflitos.
 - **Política de Remoção de CPF:** A ação de remover um CPF autorizado agora inativa o jogador se ele já estiver cadastrado, em vez de simplesmente deletar o registro.
+- **Redirecionamento de Login:** Corrigido o redirecionamento incorreto após o login, garantindo que o usuário seja direcionado para a página correta.
+- **Links de Redes Sociais:** Removidos os links quebrados de redes sociais na página de login.
+- **Nome do Banco de Dados:** A conexão com o MongoDB agora permite a configuração do nome do banco de dados via variável de ambiente `DB_NAME`.
+- **Dashboard do Jogador:** Adicionadas estruturas básicas de placeholder para exibição de estatísticas e histórico de pagamentos nas páginas de dashboard e perfil do jogador.
