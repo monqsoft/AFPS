@@ -2,10 +2,13 @@
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { MenuIcon, LogOut } from "lucide-react"
+import { MenuIcon, LogOut, Moon, Sun } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
 import { logoutAction } from "@/app/login/actions"
+import { useTheme } from "next-themes"
+import { SessionData } from "@/types/player-interfaces"
+import { ROLES } from "@/lib/roles"
 
 
 
@@ -13,13 +16,18 @@ export default function Navbar({ session }: { session: SessionData | null }) {
   const pathname = usePathname()
   const router = useRouter()
   const [isSheetOpen, setIsSheetOpen] = useState(false)
+  const { theme, setTheme } = useTheme()
 
-  const navLinks = [
+  const navLinks: {
+    href: string
+    label: string
+    roles?: (typeof ROLES[keyof typeof ROLES])[]
+  }[] = [
     { href: "/dashboard", label: "Dashboard" },
-    { href: `/jogadores/${session?.cpf}`, label: "Meu Perfil", roles: ["jogador", "admin"] },
-    { href: "/jogadores", label: "Jogadores", roles: ["admin"] },
-    { href: "/admin", label: "Gerenciamento", roles: ["admin"] },
-    { href: "/transparencia", label: "Transparência", roles: ["jogador", "admin"] },
+    { href: `/jogadores/${session?.cpf}`, label: "Meu Perfil", roles: [ROLES.ADMIN, ROLES.JOGADOR] },
+    { href: "/admin", label: "Gerenciamento", roles: [ROLES.ADMIN] },
+    { href: "/admin/despesas", label: "Despesas", roles: [ROLES.ADMIN] },
+    { href: "/transparencia", label: "Transparência", roles: [ROLES.JOGADOR, ROLES.ADMIN] },
   ]
 
   const filteredLinks = navLinks.filter((link) => {
@@ -56,6 +64,15 @@ export default function Navbar({ session }: { session: SessionData | null }) {
         </nav>
 
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          >
+            <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            <span className="sr-only">Toggle theme</span>
+          </Button>
           {session && (
             <form action={logoutAction} className="hidden md:block">
               <Button

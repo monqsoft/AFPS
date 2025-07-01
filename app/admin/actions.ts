@@ -107,10 +107,62 @@ export async function addPlayerStatsAction(playerId: string, stats: any) {
 }
 
 // Gerenciamento Geral (Perfis e Acesso) - (addAuthorizedCpfAction is above)
-export async function updatePlayerRoleAction(playerId: string, newRole: string) {
-  /* TODO: Implement logic */
-  console.log("updatePlayerRoleAction called for player:", playerId, "to role:", newRole)
-  return { success: false, message: "updatePlayerRoleAction: Not implemented" }
+export async function deactivatePlayerAction(cpfToDeactivate: string) {
+  const session = await getSession();
+  if (!session || session.role !== ROLES.ADMIN) {
+    return { success: false, message: "Não autorizado." };
+  }
+
+  try {
+    await dbConnect();
+    const player = await Player.findOne({ cpf: cpfToDeactivate });
+
+    if (!player) {
+      return { success: false, message: "Jogador não encontrado." };
+    }
+
+    player.isAuthorized = false;
+    player.status = "inativo";
+    await player.save();
+
+    await createLog("Jogador Desativado", session.cpf, ROLES.ADMIN, { cpfDesativado: cpfToDeactivate, nome: player.nome });
+    revalidatePath("/admin");
+    return { success: true, message: `Jogador ${player.nome} (${cpfToDeactivate}) desativado com sucesso.` };
+  } catch (error: any) {
+    logger.error("Deactivate Player Error:", { error });
+    await createLog("Erro ao desativar jogador", session.cpf, ROLES.ADMIN, { cpf: cpfToDeactivate, error: error.message });
+    return { success: false, message: "Erro ao desativar jogador." };
+  }
+}
+
+export async function editPlayerAction(cpfToEdit: string, data: { nome?: string; role?: Role; status?: string }) {
+  const session = await getSession();
+  if (!session || session.role !== ROLES.ADMIN) {
+    return { success: false, message: "Não autorizado." };
+  }
+
+  try {
+    await dbConnect();
+    const player = await Player.findOne({ cpf: cpfToEdit });
+
+    if (!player) {
+      return { success: false, message: "Jogador não encontrado." };
+    }
+
+    if (data.nome) player.nome = data.nome;
+    if (data.role) player.role = data.role as any; // Cast to any due to mongoose type issue
+    if (data.status) player.status = data.status as any; // Cast to any
+
+    await player.save();
+
+    await createLog("Jogador Editado", session.cpf, ROLES.ADMIN, { cpfEditado: cpfToEdit, updates: data });
+    revalidatePath("/admin");
+    return { success: true, message: `Jogador ${player.nome} (${cpfToEdit}) atualizado com sucesso.` };
+  } catch (error: any) {
+    logger.error("Edit Player Error:", { error });
+    await createLog("Erro ao editar jogador", session.cpf, ROLES.ADMIN, { cpf: cpfToEdit, error: error.message });
+    return { success: false, message: "Erro ao editar jogador." };
+  }
 }
 export async function removeAuthorizedCpfAction(cpfToRemove: string) {
   const session = await getSession()
@@ -183,24 +235,70 @@ export async function updateMensalidadeAction(newValor: number) {
 }
 
 // Logs e Auditoria
-export async function fetchLogsAction(filters: any) {
-  /* TODO: Implement logic */
-  console.log("fetchLogsAction called with filters:", filters)
-  const session = await getSession()
+export async function fetchLogsAction({ page = 1, limit = 10, filter = {} }: { page?: number; limit?: number; filter?: any }) {
+  const session = await getSession();
   if (!session || session.role !== ROLES.ADMIN) {
-    return { success: false, message: "Não autorizado.", logs: [] }
+    return { success: false, message: "Não autorizado.", logs: [], totalPages: 0, currentPage: 1 };
   }
+
   try {
-    await dbConnect()
-    // Basic fetch, add filtering later
-    const logs = await Log.find(filters || {})
+    await dbConnect();
+
+    const query: any = {};
+    if (filter.search) {
+      const searchRegex = new RegExp(filter.search, "i");
+      const cleanedSearch = filter.search.replace(/\D/g, ""); // Remove non-digits for CPF search
+
+      query.$or = [
+        { type: searchRegex },
+        { "metadata.nome": searchRegex },
+        { "metadata.error": searchRegex },
+        { "performedBy.role": searchRegex },
+      ];
+
+      // Add CPF specific search if the cleaned search query is a valid CPF format
+      if (cleanedSearch.length === 11 && /^[0-9]+$/.test(cleanedSearch)) {
+        query.$or.push(
+          { "metadata.cpfAutorizado": cleanedSearch }, // Exact match for cleaned CPF
+          { "performedBy.cpf": cleanedSearch } // Exact match for cleaned CPF
+        );
+      } else {
+        // If not a clean CPF, use regex for partial matches on CPF fields
+        query.$or.push(
+          { "metadata.cpfAutorizado": searchRegex },
+          { "performedBy.cpf": searchRegex }
+        );
+      }
+    }
+    if (filter.type) {
+      query.type = filter.type;
+    }
+    if (filter.startDate && filter.endDate) {
+      query.timestamp = {
+        $gte: new Date(filter.startDate),
+        $lte: new Date(filter.endDate),
+      };
+    }
+
+    const totalLogs = await Log.countDocuments(query);
+    const totalPages = Math.ceil(totalLogs / limit);
+
+    const logs = await Log.find(query)
       .sort({ timestamp: -1 })
-      .limit(100)
-      .lean()
-    return { success: true, logs: JSON.parse(JSON.stringify(logs)) } // Ensure serializable
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+
+    return {
+      success: true,
+      logs: JSON.parse(JSON.stringify(logs)),
+      totalPages,
+      currentPage: page,
+      totalLogs,
+    };
   } catch (error) {
-    console.error("Fetch Logs Error:", error)
-    return { success: false, message: "Erro ao buscar logs.", logs: [] }
+    console.error("Fetch Logs Error:", error);
+    return { success: false, message: "Erro ao buscar logs.", logs: [], totalPages: 0, currentPage: 1 };
   }
 }
 

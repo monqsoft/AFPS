@@ -152,3 +152,7 @@ O painel administrativo é uma página com abas que centraliza as operações:
 - **Links de Redes Sociais:** Removidos os links quebrados de redes sociais na página de login.
 - **Nome do Banco de Dados:** A conexão com o MongoDB agora permite a configuração do nome do banco de dados via variável de ambiente `DB_NAME`.
 - **Dashboard do Jogador:** Adicionadas estruturas básicas de placeholder para exibição de estatísticas e histórico de pagamentos nas páginas de dashboard e perfil do jogador.
+- **Máscaras de Input para CPF e Telefone:** Implementadas máscaras de input para CPF e telefone no formulário de cadastro.
+- **Filtragem e Paginação de Logs:** Implementada a funcionalidade de filtragem e paginação para a tabela de logs no painel administrativo.
+- **Tipagem e Validação de Dados em Actions:** Melhorada a tipagem e validação de dados em Server Actions, substituindo `any` por tipos específicos ou schemas Zod.
+- **Otimização de UI/UX para Server Actions:** Implementados estados de carregamento e otimizações de UI/UX para interações com Server Actions.

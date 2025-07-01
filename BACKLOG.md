@@ -54,6 +54,27 @@ Este documento serve como um backlog de desenvolvimento, listando tarefas penden
   - **Descrição:** Adicionadas estruturas básicas de placeholder para exibição de estatísticas e histórico de pagamentos nas páginas de dashboard e perfil do jogador.
   - **Status:** RESOLVIDO (com placeholders, aguardando implementação de dados reais).
 
+- **`[BAIXO]` Tipagem e Validação de Dados em Actions**
+  - **Local:** `app/admin/actions.ts` e outras actions.
+  - **Descrição:** Substituído o uso de `any` por tipos específicos ou schemas Zod para garantir a segurança e integridade dos dados em `app/admin/actions.ts`.
+  - **Status:** RESOLVIDO.
+
+- **`[BAIXO]` Otimização de UI/UX para Server Actions**
+  - **Local:** Componentes que interagem com Server Actions (formulários, botões de ação).
+  - **Descrição:** Implementados estados de carregamento (loading states) utilizando `useFormStatus` em `AddAuthorizedCpfForm` e `ConfigMensalidadeForm`.
+  - **Status:** RESOLVIDO.
+
+- **`[MÉDIO]` Aplicar Máscaras de Input para CPF e Telefone**
+  - **Local:** Componentes de formulário, como `components/registration-stepper.tsx`.
+  - **Descrição:** Os campos de CPF e telefone no formulário de cadastro aceitam texto livre, o que pode levar a erros de formatação. A experiência do usuário seria melhorada com a aplicação de máscaras de input (ex: `999.999.999-99` para CPF e `(99) 99999-9999` para telefone).
+  - **Correção Sugerida:** Utilizar uma biblioteca de máscaras como `react-input-mask` ou similar para formatar os campos de CPF e telefone em tempo real, garantindo que os dados sejam inseridos no formato correto.
+  - **Status:** RESOLVIDO.
+
+- **`[MÉDIO]` Filtragem e Paginação de Logs**
+  - **Local:** `app/admin/page.tsx`, `app/admin/actions.ts`, `components/logs-table.tsx`.
+  - **Descrição:** Implementada a UI para filtros e paginação em `app/admin/page.tsx`, atualizada `app/admin/actions.ts` para processar filtros e paginação, e adaptada `components/logs-table.tsx` para utilizar esses recursos.
+  - **Status:** RESOLVIDO.
+
 ## ❗ Falhas de Segurança Críticas (Pendentes)
 
 Estas são as prioridades máximas e devem ser corrigidas imediatamente.
@@ -79,15 +100,22 @@ Estas são as prioridades máximas e devem ser corrigidas imediatamente.
 - **`[ALTO]` Gerenciamento de Jogadores no Painel de Admin**
   - **Local:** `app/admin/page.tsx` e `app/admin/actions.ts`.
   - **Descrição:** A aba "Jogadores" e suas actions (`editPlayerInfoAction`, `togglePlayerStatusAction`, etc.) são placeholders. É preciso implementar a UI e a lógica para:
-    - Editar dados de um jogador.
+    - Listar todos os jogadores com busca, filtro e paginação.
+    - Visualizar e editar dados de um jogador (nome, apelido, nascimento, email, telefone, posição, número da camisa).
     - Ativar/Inativar um jogador.
-    - Adicionar estatísticas (gols, cartões).
+    - Adicionar/editar estatísticas de jogadores (gols, assistências, cartões).
+    - Alterar o perfil (role) de um jogador.
   - **Componentes a serem alterados:** `app/admin/page.tsx`, `app/admin/actions.ts`, `models/player-model.ts`, e novos componentes em `components/` para formulários de edição e tabelas de jogadores.
   - **Status:** PENDENTE.
 
 - **`[MÉDIO]` Gerenciamento de Despesas no Painel de Admin**
   - **Local:** `app/admin/page.tsx` e `app/admin/actions.ts`.
   - **Descrição:** A aba "Despesas" é um placeholder. É preciso implementar o formulário, a tabela e a lógica para registrar e visualizar as despesas da comissão.
+    - Criar um novo modelo `ExpenseModel` (descrição, valor, data, categoria, registrado por).
+    - Formulário para adicionar novas despesas.
+    - Tabela para listar despesas com busca, filtro e paginação.
+    - Funcionalidade para editar e deletar despesas.
+    - Relatórios básicos de despesas por categoria ou período.
   - **Componentes a serem alterados:** `app/admin/page.tsx`, `app/admin/actions.ts`, e novos componentes em `components/` para o formulário e tabela de despesas.
   - **Status:** PENDENTE.
 
@@ -112,10 +140,3 @@ Estas são as prioridades máximas e devem ser corrigidas imediatamente.
     - `lib/utils.ts` (contém `ClassValue` do `clsx`, mas não define interfaces próprias; pode conter tipos utilitários a serem extraídos)
     - `hooks/*.ts` (hooks podem conter tipos inferidos ou inline que precisarão ser extraídos)
   - **Status:** PENDENTE.
-
-- **`[MÉDIO]` Aplicar Máscaras de Input para CPF e Telefone**
-  - **Local:** Componentes de formulário, como `components/registration-stepper.tsx`.
-  - **Descrição:** Os campos de CPF e telefone no formulário de cadastro aceitam texto livre, o que pode levar a erros de formatação. A experiência do usuário seria melhorada com a aplicação de máscaras de input (ex: `999.999.999-99` para CPF e `(99) 99999-9999` para telefone).
-  - **Componentes a serem alterados:** `components/registration-stepper.tsx`, `components/ui/input.tsx` (se a máscara for aplicada diretamente no input), e possivelmente outros componentes de formulário que utilizem CPF/telefone.
-  - **Correção Sugerida:** Utilizar uma biblioteca de máscaras como `react-input-mask` ou similar para formatar os campos de CPF e telefone em tempo real, garantindo que os dados sejam inseridos no formato correto.
-  - **Status:** PARCIALMENTE IMPLEMENTADO (máscara de telefone adicionada, CPF pendente).

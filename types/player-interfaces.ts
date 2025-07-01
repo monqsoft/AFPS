@@ -18,3 +18,9 @@ export interface SessionData {
   role: Role;
   nome: string;
 }
+
+export interface EditPlayerFormState {
+  message?: string;
+  success: boolean;
+  errors?: { [key: string]: string[] };
+}

@@ -5,38 +5,144 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Loader2 } from "lucide-react"
-import type { ILog } from "@/models/log-model" // Assuming ILog is exported
+import { Loader2, ChevronLeft, ChevronRight, CalendarIcon, XCircle } from "lucide-react"
+import type { ILog } from "@/models/log-model"
+import { useToast } from "@/components/ui/use-toast"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+import { format } from "date-fns"
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils"
 
-export default function LogsTable() {
-  const [logs, setLogs] = useState<ILog[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+interface LogsTableProps {
+  initialLogs: ILog[];
+}
 
-  const loadLogs = async () => {
-    setIsLoading(true)
-    setError(null)
-    const result = await fetchLogsAction({}) // Pass filters if implemented
-    if (result.success && result.logs) {
-      setLogs(result.logs as ILog[]) // Cast needed if type from action is generic
-    } else {
-      setError(result.message || "Falha ao carregar logs.")
+export default function LogsTable({ initialLogs }: LogsTableProps) {
+  const { toast } = useToast();
+  const [logs, setLogs] = useState<ILog[]>(initialLogs);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalLogs, setTotalLogs] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [logTypeFilter, setLogTypeFilter] = useState("");
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const limit = 10; // Number of logs per page
+
+  const loadLogs = async (page: number, search: string, type: string, start?: Date, end?: Date) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const filter: any = { search, type: type === "all" ? undefined : type };
+      if (start) {
+        filter.startDate = start.toISOString();
+      }
+      if (end) {
+        // Set end date to the end of the day
+        const endOfDay = new Date(end);
+        endOfDay.setHours(23, 59, 59, 999);
+        filter.endDate = endOfDay.toISOString();
+      }
+
+      const result = await fetchLogsAction({
+        page,
+        limit,
+        filter,
+      });
+
+      if (result.success && result.logs) {
+        setLogs(result.logs as ILog[]);
+        setTotalPages(result.totalPages || 0);
+        setCurrentPage(result.currentPage || 1);
+        setTotalLogs(result.totalLogs || 0);
+      } else {
+        setError(result.message || "Falha ao carregar logs.");
+        toast({
+          title: "Erro ao carregar logs",
+          description: result.message || "Ocorreu um erro desconhecido.",
+          variant: "destructive",
+        });
+      }
+    } catch (err: any) {
+      setError(err.message || "Ocorreu um erro inesperado.");
+      toast({
+        title: "Erro inesperado",
+        description: err.message || "Verifique sua conexão e tente novamente.",
+        variant: "destructive",
+      });
     }
-    setIsLoading(false)
-  }
+    setIsLoading(false);
+  };
 
   useEffect(() => {
-    loadLogs()
-  }, [])
+    loadLogs(currentPage, searchQuery, logTypeFilter, startDate, endDate);
+  }, [currentPage, searchQuery, logTypeFilter, startDate, endDate]);
+
+  const handleClearFilters = () => {
+    setSearchQuery("");
+    setLogTypeFilter("");
+    setStartDate(undefined);
+    setEndDate(undefined);
+    setCurrentPage(1);
+  };
 
   return (
     <div>
-      <div className="flex justify-end mb-4">
-        <Button onClick={loadLogs} disabled={isLoading} variant="outline">
-          {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          Atualizar Logs
+      <div className="flex flex-col md:flex-row gap-4 mb-4 items-end">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant={"outline"}
+              className={cn(
+                "w-[200px] justify-start text-left font-normal",
+                !startDate && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {startDate ? format(startDate, "PPP", { locale: ptBR }) : <span>Data Início</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={startDate}
+              onSelect={setStartDate}
+              initialFocus
+              locale={ptBR}
+            />
+          </PopoverContent>
+        </Popover>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant={"outline"}
+              className={cn(
+                "w-[200px] justify-start text-left font-normal",
+                !endDate && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {endDate ? format(endDate, "PPP", { locale: ptBR }) : <span>Data Fim</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={endDate}
+              onSelect={setEndDate}
+              initialFocus
+              locale={ptBR}
+            />
+          </PopoverContent>
+        </Popover>
+        <Button variant="outline" onClick={handleClearFilters} className="flex items-center gap-2">
+          <XCircle className="h-4 w-4" /> Limpar
         </Button>
       </div>
+
       {error && <p className="text-destructive text-center mb-4">{error}</p>}
       <ScrollArea className="h-[600px] border rounded-md">
         <Table>
@@ -61,7 +167,7 @@ export default function LogsTable() {
             {!isLoading && logs.length === 0 && !error && (
               <TableRow>
                 <TableCell colSpan={5} className="text-center">
-                  Nenhum log encontrado.
+                  Nenhum log encontrado com os filtros aplicados.
                 </TableCell>
               </TableRow>
             )}
@@ -83,6 +189,28 @@ export default function LogsTable() {
           </TableBody>
         </Table>
       </ScrollArea>
+
+      <div className="flex items-center justify-between space-x-2 py-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+          disabled={currentPage <= 1 || isLoading}
+        >
+          <ChevronLeft className="h-4 w-4 mr-2" /> Anterior
+        </Button>
+        <span className="text-sm text-muted-foreground">
+          Página {currentPage} de {totalPages} ({totalLogs} logs)
+        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+          disabled={currentPage >= totalPages || isLoading}
+        >
+          Próxima <ChevronRight className="h-4 w-4 ml-2" />
+        </Button>
+      </div>
     </div>
-  )
+  );
 }

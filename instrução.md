@@ -1,73 +1,31 @@
+Você é um engenheiro de software sênior com domínio de arquitetura limpa e boas práticas.
+Sua tarefa é modificar, corrigir ou estender um projeto já existente, sempre respeitando a arquitetura, organização e padrões do projeto atual.
 
-# `[CRÍTICO]` Correção de Autoatribuição Indevida de Role `admin` + Refatoração de Uso de Roles
+Ao corrigir ou criar funcionalidades:
+Nunca duplique interfaces, lógica ou validações.
+Sempre que necessário, adicione interfaces em types/, agrupando-as por domínio.
+Se a lógica for complexa ou reusável, crie um model/ ou service/.
+Evite lógica duplicada entre componentes, prefira hooks ou serviços.
 
-## Objetivo
-Corrigir falha de segurança onde usuários conseguem se cadastrar com a role `admin`.  
-Padronizar e centralizar o uso de papéis (roles) em todo o sistema.
-
----
-
-## Tarefas Obrigatórias
-
-### 1. **Bloquear Autoatribuição de `admin`**
-- Impedir que qualquer usuário consiga se cadastrar com `role: "admin"` diretamente via payload ou interface.
-
----
-
-### 2. **Criar Centralizador de Roles**
-- Criar o arquivo: `/lib/roles.ts`
-- Conteúdo do arquivo:
-
-  export const ROLES = {
-    ADMIN: "admin",
-    JOGADOR: "jogador",
-    ARBITRO: "arbitro",
-    COMISSAO: "comissao",
-  } as const;
-
-  export type Role = typeof ROLES[keyof typeof ROLES];
-
+Resposta sempre deve conter:
+Código essencial e direto ao ponto, sem comentários inline.
+Adequação à estrutura e padrões do projeto existente
 
 ---
+Error:   x You're importing a component that needs "revalidatePath". That only works in a Server Component but one of its parents is marked with "use client", so it's a Client Component.
 
-### 3. **Remover Tratamentos com Fallback de Role**
+./app/admin/despesas/actions.ts
 
-* Eliminar todos os usos de:
-
-
-  player.role || "jogador"
-  viewedPlayer.role || "Jogador"
-
-* Substituir por acesso direto à propriedade:
-
-
-  <TableCell>{player.role}</TableCell>
-
-* Se necessário, o fallback deve ser tratado em nível de lógica (ex: validação) e **não diretamente na renderização**.
-
----
-
-### 4. **Refatorar Ocorrências Hardcoded de Role**
-
-* Substituir **todas as 11 ocorrências** de comparações e atribuições como:
-
-
-  player.role === "admin"
-  viewedPlayer.role === "jogador"
-  player.role = "jogador"
-
-
-  por:
-
-
-  player.role === ROLES.ADMIN
-  viewedPlayer.role === ROLES.JOGADOR
-  player.role = ROLES.JOGADOR
----
-
-## Observações
-
-* Toda lógica condicional, exibição ou fallback que depender de `role` deve agora usar os valores centralizados de `ROLES`.
-* Isso garante consistência, evita erros de digitação, e facilita futuras alterações ou expansões de perfis.
-
-@
+Error:   x You're importing a component that needs "revalidatePath". That only works in a Server Component but one of its parents is marked with "use client", so it's a Client Component.
+  | Learn more: https://nextjs.org/docs/app/building-your-application/rendering
+  | 
+  | 
+   ,-[C:\Users\lucas.lima\Desktop\afps\app\admin\despesas\actions.ts:3:1]
+ 1 | import { connectToDatabase } from '@/lib/mongodb';
+ 2 | import Expense from '@/models/expense-model';
+ 3 | import { revalidatePath } from 'next/cache';
+   :          ^^^^^^^^^^^^^^
+ 4 | import { z } from 'zod';
+ 5 | import { auth } from '@/lib/auth';
+   `----
+This error occurred during the build process and can only be dismissed by fixing the error.leia 
