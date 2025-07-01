@@ -1,6 +1,7 @@
 "use client"
 import { useFormStatus } from "react-dom"
-import { loginAction, type LoginFormState } from "@/app/login/actions"
+import { loginAction } from "@/app/login/actions"
+import { LoginFormState } from "@/types/player-interfaces"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"

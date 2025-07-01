@@ -1,4 +1,5 @@
 import mongoose, { Schema, type Document, models, type Model } from "mongoose"
+import { Role, ROLES } from "@/lib/roles"
 
 export interface IPlayer extends Document {
   nome: string // Will be filled during registration
@@ -9,7 +10,7 @@ export interface IPlayer extends Document {
   email?: string
   posicao?: string
   numero?: number
-  role: "jogador" | "admin" | null // null for pre-authorized, not yet registered
+  role: Role | null // null for pre-authorized, not yet registered
   status: "ativo" | "inativo" | "autorizado_nao_cadastrado" | "pendente_aprovacao"
   // Fields for player dashboard
   mensalidadesPagas?: { mesReferencia: string; dataPagamento: Date }[]
@@ -30,7 +31,7 @@ const PlayerSchema: Schema<IPlayer> = new Schema(
     email: { type: String },
     posicao: { type: String },
     numero: { type: Number },
-    role: { type: String, enum: ["jogador", "admin", null], default: null },
+    role: { type: String, enum: Object.values(ROLES), default: null },
     status: {
       type: String,
       enum: ["ativo", "inativo", "autorizado_nao_cadastrado", "pendente_aprovacao"],

@@ -7,11 +7,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
 import { logoutAction } from "@/app/login/actions"
 
-interface SessionData {
-  cpf: string
-  role: "jogador" | "admin"
-  nome: string
-}
+
 
 export default function Navbar({ session }: { session: SessionData | null }) {
   const pathname = usePathname()

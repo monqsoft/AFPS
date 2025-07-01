@@ -5,11 +5,9 @@ import Player, { type IPlayer } from "@/models/player-model"
 import { clearSession, createSession } from "@/lib/auth"
 import { isValidCpf } from "@/lib/utils"
 import { logger } from "@/lib/logger"
+import { LoginFormState } from "@/types/player-interfaces"
 
-export interface LoginFormState {
-  message: string | null
-  success: boolean
-}
+
 
 export async function loginAction(_prevState: LoginFormState, formData: FormData): Promise<LoginFormState> {
   await dbConnect()
@@ -39,7 +37,7 @@ export async function loginAction(_prevState: LoginFormState, formData: FormData
     }
 
     await createSession(player)
-    redirect("/dashboard") // Server-side redirect after successful login
+    permanentRedirect("/dashboard") // Server-side redirect after successful login
   } catch (error) {
     logger.error("Login error:", { error });
     return {

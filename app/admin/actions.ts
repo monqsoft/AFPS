@@ -9,6 +9,7 @@ import { z } from "zod"
 import { revalidatePath } from "next/cache"
 import { ROLES } from "@/lib/roles"
 import { logger } from "@/lib/logger"
+import { AddAuthorizedCpfState } from "@/types/admin-interfaces"
 
 // Schema for adding an authorized CPF
 const AddAuthorizedCpfSchema = z.object({
@@ -17,16 +18,7 @@ const AddAuthorizedCpfSchema = z.object({
   roleInicial: z.enum([ROLES.JOGADOR, ROLES.ADMIN, ROLES.ARBITRO, ROLES.COMISSAO, ""]).optional(),
 })
 
-export interface AddAuthorizedCpfState {
-  message?: string
-  success: boolean
-  errors?: {
-    cpf?: string[]
-    nomeInicial?: string[]
-    roleInicial?: string[]
-    general?: string
-  }
-}
+
 
 export async function addAuthorizedCpfAction(
   prevState: AddAuthorizedCpfState | undefined,

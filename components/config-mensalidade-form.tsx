@@ -9,19 +9,9 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
 import { Loader2, Save } from "lucide-react"
+import { ConfigMensalidadeFormProps, UpdateMensalidadeState } from "@/types/config-interfaces"
 
-interface ConfigMensalidadeFormProps {
-  currentValor: number
-}
 
-interface UpdateMensalidadeState {
-  message?: string
-  success: boolean
-  errors?: {
-    valor?: string[]
-    general?: string
-  }
-}
 
 const initialState: UpdateMensalidadeState = {
   success: false,

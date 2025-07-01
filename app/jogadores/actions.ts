@@ -6,19 +6,9 @@ import { createLog } from "@/models/log-model"
 import { QrCodePix } from "qrcode-pix" // Ensure this lib is compatible with Next.js Edge/Serverless if applicable
 import { ROLES } from "@/lib/roles"
 import { logger } from "@/lib/logger"
+import { PixData, PixGenerationState } from "@/types/pix-interfaces"
 
-export interface PixData {
-  payload: string // Copia e Cola
-  qrCodeBase64: string // Base64 for QR Code image
-  valor: number
-  descricao: string
-  chavePix: string
-}
 
-export interface PixGenerationState {
-  pixData?: PixData
-  error?: string
-}
 
 export async function generatePixPayment(jogadorCpf: string): Promise<PixGenerationState> {
   try {

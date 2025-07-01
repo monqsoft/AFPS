@@ -2,7 +2,8 @@
 
 import { useFormState, useFormStatus } from "react-dom"
 import { useEffect, useRef } from "react"
-import { addAuthorizedCpfAction, type AddAuthorizedCpfState } from "@/app/admin/actions"
+import { addAuthorizedCpfAction } from "@/app/admin/actions"
+import { AddAuthorizedCpfState } from "@/types/admin-interfaces"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"

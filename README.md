@@ -14,6 +14,8 @@ O projeto AFPS é uma aplicação web full-stack construída com **Next.js** e *
 - **Autenticação:** Sistema de sessão baseado em cookies, gerenciado por um `middleware` customizado e `lib/auth.ts`.
 - **Mutations de Dados:** [Next.js Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations) para interações com o backend (formulários, etc.).
 - **Geração de PIX:** A biblioteca `qrcode-pix` é usada para gerar códigos de pagamento dinâmicos.
+- **Máscaras de Input:** A biblioteca `react-input-mask` é utilizada para formatação de campos como CPF e telefone.
+- **Tipagem Centralizada:** Interfaces e tipos TypeScript são centralizados na pasta `types/` para melhor organização e reuso.
 
 ## Configuração do Ambiente
 
@@ -34,9 +36,10 @@ Para executar este projeto localmente, siga os passos abaixo:
 
 3.  **Configurar Variáveis de Ambiente**
     - Crie um arquivo chamado `.env.local` na raiz do projeto.
-    - Adicione a sua string de conexão do MongoDB a este arquivo:
+    - Adicione a sua string de conexão do MongoDB a este arquivo. Opcionalmente, você pode definir o nome do banco de dados.
       ```
       MONGODB_URI="sua_string_de_conexao_do_mongodb_aqui"
+      DB_NAME="afps_db" # Opcional: nome do banco de dados, se não estiver na URI
       ```
     - **Importante:** O arquivo `.env.local` já está no `.gitignore` para garantir que suas credenciais não sejam enviadas para o repositório.
 
@@ -60,7 +63,7 @@ A aplicação utiliza os seguintes modelos de dados no MongoDB:
 - **`Player` (`player-model.ts`):** O modelo central da aplicação. Armazena todas as informações dos jogadores, incluindo:
   - Dados pessoais (nome, CPF, nascimento).
   - Status de autorização e de cadastro (`isAuthorized`, `registrationCompleted`).
-  - Perfil (`role`: 'jogador' ou 'admin').
+  - Perfil (`role`: utiliza os valores definidos em `lib/roles.ts`).
   - Dados de jogo (posição, número da camisa).
   - Histórico financeiro e estatísticas (mensalidades, cartões, gols).
 
@@ -75,8 +78,8 @@ A aplicação utiliza os seguintes modelos de dados no MongoDB:
 ### 1. Autenticação
 
 1.  **Acesso:** O `middleware.ts` intercepta todas as requisições. Se o usuário não estiver autenticado (verificado via cookie `afps_session`) e tentar acessar uma rota protegida, ele é redirecionado para `/login`.
-2.  **Login:** Na página de login, o usuário insere seu CPF. A `loginAction` (`app/login/actions.ts`) verifica se existe um jogador com aquele CPF e se ele está autorizado (`isAuthorized: true`).
-3.  **Criação da Sessão:** Se a validação for bem-sucedida, `lib/auth.ts` cria um cookie de sessão seguro (`httpOnly`) com os dados essenciais do usuário.
+2.  **Login:** Na página de login, o usuário insere seu CPF. A `loginAction` (`app/login/actions.ts`) verifica se existe um jogador com aquele CPF e se ele está autorizado (`isAuthorized: true`). A validação do CPF agora inclui uma checagem matemática.
+3.  **Criação da Sessão:** Se a validação for bem-sucedida, `lib/auth.ts` cria um cookie de sessão seguro (`httpOnly`) com os dados essenciais do usuário, utilizando os `ROLES` centralizados.
 4.  **Logout:** A `logoutAction` remove o cookie de sessão e redireciona o usuário para a página de login.
 
 ### 2. Cadastro de Novo Jogador
@@ -86,18 +89,18 @@ Este fluxo é projetado para garantir que apenas pessoas aprovadas pela administ
 1.  **Autorização (Admin):**
     - Um administrador acessa o painel `/admin`.
     - Na aba "Perfis e Acesso", ele usa o formulário `AddAuthorizedCpfForm` para adicionar o CPF de um novo jogador.
-    - A `addAuthorizedCpfAction` cria um novo documento `Player` com `isAuthorized: true`, `registrationCompleted: false` e `status: 'autorizado_nao_cadastrado'`.
+    - A `addAuthorizedCpfAction` cria um novo documento `Player` com `isAuthorized: true`, `registrationCompleted: false` e `status: 'autorizado_nao_cadastrado'`. O administrador pode pré-definir a `role` inicial do usuário (Jogador, Administrador, Árbitro, Comissão).
 
 2.  **Verificação (Novo Jogador):**
     - O novo jogador acessa a página `/cadastro`.
-    - Ele insere seu CPF. A `checkCpfAuthorization` action verifica no banco de dados se o CPF pertence a um jogador com `isAuthorized: true` e `registrationCompleted: false`.
+    - Ele insere seu CPF. A `checkCpfAuthorization` action verifica no banco de dados se o CPF pertence a um jogador com `isAuthorized: true` e `registrationCompleted: false`. A validação do CPF agora inclui uma checagem matemática.
     - Se o CPF não for autorizado, uma mensagem de erro é exibida. Se já for cadastrado, ele é instruído a fazer login.
 
 3.  **Preenchimento do Formulário:**
     - Se o CPF for válido, o componente `RegistrationStepper` é renderizado.
-    - O jogador preenche suas informações em um formulário de múltiplos passos (Informações Pessoais, Contato, Finalização).
+    - O jogador preenche suas informações em um formulário de múltiplos passos (Informações Pessoais, Contato, Finalização). Campos como CPF e telefone agora utilizam máscaras de input para melhor experiência do usuário.
     - Cada passo chama a `submitRegistrationStep` action, que valida e salva os dados no documento `Player` correspondente.
-    - Ao final, o status do jogador é atualizado para `ativo` e `registrationCompleted` se torna `true`.
+    - Ao final, o status do jogador é atualizado para `ativo` e `registrationCompleted` se torna `true`. O usuário pode selecionar sua `role` (Jogador, Administrador, Árbitro, Comissão), com a `role` de Administrador sujeita a aprovação.
 
 ### 3. Gestão Administrativa (`/admin`)
 
@@ -106,7 +109,7 @@ O painel administrativo é uma página com abas que centraliza as operações:
 - **Jogadores:** (Funcionalidade a ser implementada) Gerenciamento de dados e estatísticas dos jogadores.
 - **Perfis e Acesso:**
   - Autoriza novos CPFs para cadastro (`AddAuthorizedCpfForm`).
-  - Lista todos os CPFs autorizados e seu status (`AuthorizedCpfList`), permitindo remover a autorização de quem ainda não completou o cadastro.
+  - Lista todos os CPFs autorizados e seu status (`AuthorizedCpfList`). A remoção de autorização para CPFs já cadastrados agora inativa o jogador em vez de deletar o registro.
 - **Mensalidade:**
   - Permite ao admin atualizar o valor da mensalidade (`ConfigMensalidadeForm`), que é salvo no modelo `Config`.
 - **Logs:**
@@ -125,9 +128,9 @@ O painel administrativo é uma página com abas que centraliza as operações:
 
 ## Componentes Principais
 
-- **`Navbar` (`components/navbar.tsx`):** Barra de navegação principal. Renderiza links diferentes com base no `role` do usuário ('jogador' ou 'admin') obtido da sessão.
-- **`LoginForm` (`components/login-form.tsx`):** Formulário de login com validação de estado (carregando, erro) gerenciada pelo `useFormState`.
-- **`RegistrationStepper` (`components/registration-stepper.tsx`):** Orquestra o fluxo de cadastro de múltiplos passos, gerenciando o estado do formulário e a comunicação com as Server Actions.
+- **`Navbar` (`components/navbar.tsx`):** Barra de navegação principal. Renderiza links diferentes com base no `role` do usuário (obtido da sessão).
+- **`LoginForm` (`components/login-form.tsx`):** Formulário de login com validação de estado (carregando, erro) gerenciada pelo `useFormState`. Agora utiliza máscara de input para CPF.
+- **`RegistrationStepper` (`components/registration-stepper.tsx`):** Orquestra o fluxo de cadastro de múltiplos passos, gerenciando o estado do formulário e a comunicação com as Server Actions. Utiliza máscaras de input para CPF e telefone.
 - **`AddAuthorizedCpfForm` e `ConfigMensalidadeForm`:** Formulários administrativos que usam Server Actions para modificar dados no backend.
 - **`LogsTable` (`components/logs-table.tsx`):** Tabela que busca e exibe dados de forma assíncrona no cliente, mostrando um estado de carregamento.
 - **`PixPaymentCard` (`components/pix-payment-card.tsx`):** Componente interativo que lida com a geração e exibição de dados de pagamento PIX.
@@ -137,3 +140,13 @@ O painel administrativo é uma página com abas que centraliza as operações:
 - **`scripts/seed.ts`:** Um script útil para ambiente de desenvolvimento. Ele popula o banco de dados com dados essenciais, como a configuração padrão e usuários de teste (um admin/jogador já cadastrado e um CPF apenas autorizado para testar o fluxo de cadastro). Para executar, use `npx tsx scripts/seed.ts`.
 - **`tailwind.config.ts`:** Contém a configuração de tema do Tailwind CSS, com cores customizadas para a identidade visual da AFPS (`primary`, `secondary`, `accent`).
 - **`middleware.ts`:** Essencial para a segurança, define as rotas públicas e privadas da aplicação.
+
+## Melhorias e Refatorações Recentes
+
+- **Centralização de Roles:** Definição de roles (`admin`, `jogador`, `arbitro`, `comissao`) em `lib/roles.ts` para padronização e consistência em todo o projeto.
+- **Segurança na Build:** Desativação das opções `ignoreDuringBuilds` (ESLint) e `ignoreBuildErrors` (TypeScript) em `next.config.mjs` para garantir que o projeto não seja compilado com erros em produção.
+- **Validação de CPF Aprimorada:** Implementação de uma função de validação matemática de CPF em `lib/utils.ts`, utilizada nos fluxos de login e cadastro.
+- **Refatoração do `useToast`:** Remoção da implementação duplicada do hook `useToast`, garantindo o uso consistente da versão de `shadcn/ui`.
+- **Logging Centralizado:** Introdução de um utilitário de logging (`lib/logger.ts`) para padronizar o registro de erros e eventos importantes, facilitando a depuração e monitoramento.
+- **Organização de Interfaces:** Criação da pasta `types/` para centralizar e organizar todas as interfaces e tipos TypeScript, evitando duplicação e conflitos.
+- **Política de Remoção de CPF:** A ação de remover um CPF autorizado agora inativa o jogador se ele já estiver cadastrado, em vez de simplesmente deletar o registro.

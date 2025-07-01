@@ -1,6 +1,7 @@
 "use client"
 import { useFormState, useFormStatus } from "react-dom"
-import { checkCpfAuthorization, type CpfCheckState } from "./actions"
+import { checkCpfAuthorization } from "./actions"
+import { CpfCheckState } from "@/types/player-interfaces"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"

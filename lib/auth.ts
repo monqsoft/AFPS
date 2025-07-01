@@ -2,14 +2,11 @@
 import type { IPlayer } from "@/models/player-model"
 import { cookies } from "next/headers"
 import { Role, ROLES } from "./roles"
+import { SessionData } from "@/types/player-interfaces"
 
 const SESSION_COOKIE_NAME = "afps_session"
 
-interface SessionData {
-  cpf: string
-  role: Role
-  nome: string
-}
+
 
 export async function createSession(player: IPlayer) {
   const sessionData: SessionData = {

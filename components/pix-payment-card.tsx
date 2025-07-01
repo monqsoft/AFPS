@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Copy, Share2, RefreshCw, Loader2 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
-import { generatePixPayment, type PixData } from "@/app/jogadores/actions"
+import { generatePixPayment } from "@/app/jogadores/actions"
+import { PixData } from "@/types/pix-interfaces"
 
 interface PixPaymentCardProps {
   jogadorCpf: string

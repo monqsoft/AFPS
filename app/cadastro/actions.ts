@@ -6,16 +6,11 @@ import { z } from "zod"
 import { ROLES } from "@/lib/roles"
 import { isValidCpf } from "@/lib/utils"
 import { logger } from "@/lib/logger"
+import { CpfCheckState } from "@/types/player-interfaces"
 
 const CpfSchema = z.string().regex(/^\d{11}$/, "CPF deve conter 11 números.").refine(isValidCpf, "CPF inválido.")
 
-export interface CpfCheckState {
-  message?: string
-  success: boolean
-  cpf?: string
-  isAuthorized?: boolean
-  isRegistered?: boolean
-}
+
 
 export async function checkCpfAuthorization(
   prevState: CpfCheckState | undefined,
