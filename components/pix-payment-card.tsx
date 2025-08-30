@@ -7,14 +7,10 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Copy, Share2, RefreshCw, Loader2 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
-import { generatePixPayment } from "@/app/jogadores/actions"
+import { createPixPayment } from "@/app/actions/payment-actions"
 import { PixData } from "@/types/pix-interfaces"
 
-interface PixPaymentCardProps {
-  jogadorCpf: string
-}
-
-export default function PixPaymentCard({ jogadorCpf }: PixPaymentCardProps) {
+export default function PixPaymentCard() {
   const [pixData, setPixData] = useState<PixData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -24,9 +20,15 @@ export default function PixPaymentCard({ jogadorCpf }: PixPaymentCardProps) {
     setIsLoading(true)
     setError(null)
     setPixData(null)
-    const result = await generatePixPayment(jogadorCpf)
-    if (result.pixData) {
-      setPixData(result.pixData)
+    const result = await createPixPayment()
+    if (result.success && result.qrCode) {
+      setPixData({ 
+        qrCodeBase64: result.qrCode,
+        payload: result.payload || '',
+        valor: result.value || 0,
+        descricao: result.description || '',
+        chavePix: '' // Not returned by the new action, but the interface requires it. Can be removed from interface.
+      })
       toast({ title: "PIX Gerado!", description: "Código PIX e QR Code prontos para pagamento." })
     } else if (result.error) {
       setError(result.error)

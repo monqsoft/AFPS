@@ -1,3 +1,4 @@
+import PixPaymentCard from "@/components/pix-payment-card";
 import { getSession } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -49,9 +50,12 @@ export default async function DashboardPage() {
             </div>
           )}
           {session.role === ROLES.JOGADOR && (
-            <div className="mt-6 p-4 bg-primary/10 rounded-lg">
-              <h3 className="text-xl font-semibold text-primary">Painel do Jogador</h3>
-              <p className="text-muted-foreground">Suas informações de jogador, pagamentos e estatísticas.</p>
+            <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="p-4 bg-primary/10 rounded-lg">
+                <h3 className="text-xl font-semibold text-primary">Painel do Jogador</h3>
+                <p className="text-muted-foreground">Suas informações de jogador, pagamentos e estatísticas.</p>
+              </div>
+              <PixPaymentCard />
             </div>
           )}
         </CardContent>
@@ -59,3 +63,4 @@ export default async function DashboardPage() {
     </div>
   )
 }
+

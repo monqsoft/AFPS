@@ -1,13 +1,5 @@
-import mongoose, { Schema, type Document, models, type Model } from "mongoose"
-
-export interface ISubscription extends Document {
-  jogadorCpf: string
-  mesReferencia: string // e.g., "2024-07"
-  dataPagamento?: Date
-  valor: number
-  status: "pendente" | "pago" | "atrasado"
-  transactionId?: string // For PIX reconciliation
-}
+import mongoose, { Schema, models, type Model } from "mongoose";
+import type { ISubscription } from "@/types/subscription-interfaces";
 
 const SubscriptionSchema: Schema<ISubscription> = new Schema(
   {
@@ -15,8 +7,8 @@ const SubscriptionSchema: Schema<ISubscription> = new Schema(
     mesReferencia: { type: String, required: true },
     dataPagamento: { type: Date },
     valor: { type: Number, required: true },
-    status: { type: String, enum: ["pendente", "pago", "atrasado"], default: "pendente" },
-    transactionId: { type: String },
+    status: { type: String, enum: ["PENDING", "APPROVED", "REJECTED"], default: "PENDING" },
+    paymentId: { type: Number, index: true },
   },
   { timestamps: true },
 )
