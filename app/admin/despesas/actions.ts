@@ -1,10 +1,10 @@
 'use server';
 
-import { connectToDatabase } from '@/lib/mongodb';
+import dbConnect from '@/lib/mongodb';
 import Expense from '@/models/expense-model';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { auth } from '@/lib/auth';
+import { getSession } from '@/lib/auth'; // Corrigido para getSession
 
 const expenseSchema = z.object({
   description: z.string().min(1, 'Descrição é obrigatória'),
@@ -17,8 +17,8 @@ const expenseSchema = z.object({
 });
 
 export async function addExpense(prevState: any, formData: FormData) {
-  const session = await auth();
-  if (!session || session.user.role !== 'admin') {
+  const session = await getSession();
+  if (!session || session.role !== 'admin') {
     return { message: 'Não autorizado', success: false };
   }
 
@@ -36,13 +36,13 @@ export async function addExpense(prevState: any, formData: FormData) {
   const { description, amount, date, category } = validatedFields.data;
 
   try {
-    await connectToDatabase();
+    await dbConnect();
     const newExpense = new Expense({
       description,
       amount,
       date: new Date(date),
       category,
-      recordedBy: session.user.nome || session.user.cpf, // Use user's name or CPF
+      recordedBy: session.nome || session.cpf, // Use user's name or CPF
     });
     await newExpense.save();
     revalidatePath('/admin/despesas');
@@ -54,8 +54,8 @@ export async function addExpense(prevState: any, formData: FormData) {
 }
 
 export async function fetchExpenses() {
-  const session = await auth();
-  if (!session || session.user.role !== 'admin') {
+  const session = await getSession();
+  if (!session || session.role !== 'admin') {
     return { message: 'Não autorizado', success: false, expenses: [] };
   }
 

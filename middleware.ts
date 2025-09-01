@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  const publicPaths = ["/login", "/cadastro", "/api/auth/callback"]
+  const publicPaths = ["/", "/login", "/cadastro", "/api/auth/callback"]
 
   if (
     !sessionData &&

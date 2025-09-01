@@ -37,7 +37,7 @@ export async function loginAction(_prevState: LoginFormState, formData: FormData
     }
 
     await createSession(player)
-    permanentRedirect("/dashboard") // Server-side redirect after successful login
+    redirect("/dashboard") // Server-side redirect after successful login
   } catch (error) {
     logger.error("Login error:", { error });
     return {

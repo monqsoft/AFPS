@@ -1,7 +1,7 @@
 "use client"
 
-import { useFormState, useFormStatus } from "react-dom"
-import { useEffect, useRef } from "react"
+import { useFormStatus } from "react-dom"
+import { useActionState, useEffect, useRef } from "react"
 import { addAuthorizedCpfAction } from "@/app/admin/actions"
 import { AddAuthorizedCpfState } from "@/types/admin-interfaces"
 import { Button } from "@/components/ui/button"
@@ -28,7 +28,7 @@ function SubmitButton() {
 }
 
 export default function AddAuthorizedCpfForm() {
-  const [state, formAction] = useFormState(addAuthorizedCpfAction, initialState)
+  const [state, formAction] = useActionState(addAuthorizedCpfAction, initialState)
   const { toast } = useToast()
   const formRef = useRef<HTMLFormElement>(null)
 
