@@ -60,7 +60,8 @@ export async function fetchPublicMatchesAction(filters: {
       query.local = { $regex: filters.local, $options: 'i' };
     }
 
-    const matches = await Match.find(query).sort({ data: -1 }).lean();
+    const matchesData = await Match.find(query).sort({ data: -1 }).lean();
+    const matches = JSON.parse(JSON.stringify(matchesData));
 
     return { success: true, matches };
   } catch (error) {
@@ -197,7 +198,7 @@ export async function fetchPlayerStatsAction(): Promise<{
       (stats) => stats.partidasJogadas > 0
     );
 
-    return { success: true, stats: activeStats };
+    return { success: true, stats: JSON.parse(JSON.stringify(activeStats)) };
   } catch (error) {
     console.error('Error fetching player stats:', error);
     return { success: false, message: 'Erro ao buscar estatísticas' };

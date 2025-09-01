@@ -8,6 +8,9 @@ import Player from '@/models/player-model';
 import { createLog } from '@/models/log-model';
 import { revalidatePath } from 'next/cache';
 
+import { getAppConfig } from '@/models/config-model';
+import PayableItem from '@/models/payable-item-model';
+
 export async function createMatchAction(matchData: Partial<IMatch>) {
   try {
     const session = await getSession();
@@ -55,6 +58,43 @@ export async function updateMatchAction(
 
     if (!updatedMatch) {
       return { success: false, message: 'Partida não encontrada' };
+    }
+
+    // Se a partida for finalizada, gerar débitos para os cartões de forma idempotente
+    if (matchData.status === 'finalizada') { // Use matchData.status here
+      const config = await getAppConfig();
+      // Usar matchData como a fonte da verdade para os cartões
+      const allCardsInForm = [
+        ...(matchData.timeA?.cartoes || []),
+        ...(matchData.timeB?.cartoes || []),
+      ];
+
+      const existingFines = await PayableItem.find({ 
+        relatedMatchId: updatedMatch._id, 
+        type: { $in: ['CARTAO_AMARELO', 'CARTAO_VERMELHO'] } 
+      });
+
+      for (const card of allCardsInForm) {
+        const cardEventIdentifier = `${card.jogadorCpf}-${card.minuto}`;
+        const fineAlreadyExists = existingFines.some(fine => 
+          fine.description.includes(`[${cardEventIdentifier}]`)
+        );
+
+        if (!fineAlreadyExists) {
+          const amount = card.tipo === 'amarelo' ? config.valorCartaoAmarelo : config.valorCartaoVermelho;
+          const description = `Cartão ${card.tipo} (minuto ${card.minuto}) na partida ${matchData.timeA?.nome} vs ${matchData.timeB?.nome} [${cardEventIdentifier}]`;
+          
+          await PayableItem.create({
+            playerCpf: card.jogadorCpf,
+            type: card.tipo === 'amarelo' ? 'CARTAO_AMARELO' : 'CARTAO_VERMELHO',
+            description,
+            amount,
+            status: 'PENDENTE',
+            referenceDate: updatedMatch.data,
+            relatedMatchId: updatedMatch._id,
+          });
+        }
+      }
     }
 
     await createLog('Partida atualizada', session.cpf, 'admin', {
@@ -154,9 +194,9 @@ export async function fetchPlayersAction() {
 
     const players = await Player.find({
       status: 'ativo',
-      registrationCompleted: true,
+      // registrationCompleted: true, // Temporarily removed for broader selection
     })
-      .select('cpf nome apelido numero posicao')
+      .select('cpf nome apelido numero posicao status')
       .sort({ nome: 1 })
       .lean();
 

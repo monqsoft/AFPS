@@ -23,6 +23,11 @@ export default function Navbar({ session }: { session: SessionData | null }) {
   }[] = [
     { href: '/dashboard', label: 'Dashboard' },
     {
+      href: '/financas',
+      label: 'Minhas Finanças',
+      roles: [ROLES.ADMIN, ROLES.JOGADOR, ROLES.ARBITRO, ROLES.COMISSAO],
+    },
+    {
       href: '/partidas',
       label: 'Partidas',
       roles: [ROLES.ADMIN, ROLES.JOGADOR, ROLES.ARBITRO, ROLES.COMISSAO],

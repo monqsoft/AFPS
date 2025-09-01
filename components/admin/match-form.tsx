@@ -2,7 +2,7 @@
 
 import type React from 'react';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Minus, Users, Target, AlertTriangle } from 'lucide-react';
+import { Minus, Users, Target, AlertTriangle, PlusCircle } from 'lucide-react';
 import {
   createMatchAction,
   updateMatchAction,
@@ -27,39 +27,121 @@ import {
 import { toast } from 'sonner';
 import type { IMatch, IGoal, ICard } from '@/models/match-model';
 import type { IPlayer } from '@/models/player-model';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface MatchFormProps {
   match?: IMatch | null;
   onSuccess: () => void;
 }
 
+// Helper component for the event dialog
+function AddEventForm({ player, team, addGoal, addCard, onFinished }: any) {
+  const [minute, setMinute] = useState('');
+  const [type, setType] = useState('gol');
+
+  const handleAddEvent = () => {
+    if (!minute) {
+      toast.error('Minuto é obrigatório');
+      return;
+    }
+    if (type === 'gol' || type === 'gol_contra' || type === 'penalti') {
+      addGoal(team, player.cpf, parseInt(minute), type);
+    } else {
+      addCard(team, player.cpf, parseInt(minute), type);
+    }
+    onFinished();
+  };
+
+  return (
+    <div className="space-y-4 p-1">
+      <h3 className="font-semibold">Adicionar evento para {player.nome}</h3>
+      <div>
+        <Label htmlFor="event-type">Tipo de Evento</Label>
+        <Select value={type} onValueChange={setType}>
+          <SelectTrigger id="event-type">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="gol">Gol</SelectItem>
+            <SelectItem value="gol_contra">Gol Contra</SelectItem>
+            <SelectItem value="penalti">Pênalti</SelectItem>
+            <SelectItem value="amarelo">Cartão Amarelo</SelectItem>
+            <SelectItem value="vermelho">Cartão Vermelho</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label htmlFor="minute">Minuto</Label>
+        <Input
+          id="minute"
+          type="number"
+          value={minute}
+          onChange={(e) => setMinute(e.target.value)}
+          placeholder="Ex: 42"
+        />
+      </div>
+      <Button onClick={handleAddEvent} className="w-full">Adicionar</Button>
+    </div>
+  );
+}
+
 export function MatchForm({ match, onSuccess }: MatchFormProps) {
   const [loading, setLoading] = useState(false);
   const [players, setPlayers] = useState<IPlayer[]>([]);
-  const [formData, setFormData] = useState({
-    data: match?.data ? new Date(match.data).toISOString().split('T')[0] : '',
-    horario: match?.horario || '',
-    local: match?.local || '',
-    timeA: {
-      nome: match?.timeA.nome || '',
-      jogadores: match?.timeA.jogadores || [],
-      gols: match?.timeA.gols || [],
-      cartoes: match?.timeA.cartoes || [],
-    },
-    timeB: {
-      nome: match?.timeB.nome || '',
-      jogadores: match?.timeB.jogadores || [],
-      gols: match?.timeB.gols || [],
-      cartoes: match?.timeB.cartoes || [],
-    },
-    status: match?.status || 'agendada',
-    observacoes: match?.observacoes || '',
-    arbitro: match?.arbitro || { cpf: '', nome: '' },
+  const [formData, setFormData] = useState(() => {
+    const initialState = {
+      data: match?.data ? new Date(match.data).toISOString().split('T')[0] : '',
+      horario: match?.horario || '',
+      local: match?.local || '',
+      timeA: {
+        nome: match?.timeA.nome || 'Time A',
+        jogadores: match?.timeA.jogadores || [],
+        gols: match?.timeA.gols || [],
+        cartoes: match?.timeA.cartoes || [],
+      },
+      timeB: {
+        nome: match?.timeB.nome || 'Time B',
+        jogadores: match?.timeB.jogadores || [],
+        gols: match?.timeB.gols || [],
+        cartoes: match?.timeB.cartoes || [],
+      },
+      status: match?.status || 'agendada',
+      observacoes: match?.observacoes || '',
+      arbitro: match?.arbitro || { cpf: '', nome: '' },
+    };
+    return initialState;
   });
+
+  // Real-time score calculation
+  const placar = useMemo(() => {
+    const placarTimeA = 
+      formData.timeA.gols.filter((g) => g.tipo !== 'gol_contra').length +
+      formData.timeB.gols.filter((g) => g.tipo === 'gol_contra').length;
+    const placarTimeB = 
+      formData.timeB.gols.filter((g) => g.tipo !== 'gol_contra').length +
+      formData.timeA.gols.filter((g) => g.tipo === 'gol_contra').length;
+    return { timeA: placarTimeA, timeB: placarTimeB };
+  }, [formData.timeA.gols, formData.timeB.gols]);
 
   useEffect(() => {
     loadPlayers();
   }, []);
+
+  // Effect to reset form when the match prop changes
+  useEffect(() => {
+    if (match) {
+      setFormData({
+        data: match.data ? new Date(match.data).toISOString().split('T')[0] : '',
+        horario: match.horario || '',
+        local: match.local || '',
+        timeA: match.timeA || { nome: 'Time A', jogadores: [], gols: [], cartoes: [] },
+        timeB: match.timeB || { nome: 'Time B', jogadores: [], gols: [], cartoes: [] },
+        status: match.status || 'agendada',
+        observacoes: match.observacoes || '',
+        arbitro: match.arbitro || { cpf: '', nome: '' },
+      });
+    }
+  }, [match]);
 
   const loadPlayers = async () => {
     try {
@@ -77,20 +159,10 @@ export function MatchForm({ match, onSuccess }: MatchFormProps) {
     setLoading(true);
 
     try {
-      // Calculate final score
-      const placarFinal = {
-        timeA:
-          formData.timeA.gols.filter((g) => g.tipo !== 'gol_contra').length +
-          formData.timeB.gols.filter((g) => g.tipo === 'gol_contra').length,
-        timeB:
-          formData.timeB.gols.filter((g) => g.tipo !== 'gol_contra').length +
-          formData.timeA.gols.filter((g) => g.tipo === 'gol_contra').length,
-      };
-
       const matchData = {
         ...formData,
         data: new Date(formData.data),
-        placarFinal,
+        placarFinal: placar, // Use the calculated score
       };
 
       const result = match
@@ -207,6 +279,27 @@ export function MatchForm({ match, onSuccess }: MatchFormProps) {
     }));
   };
 
+  const removeGoal = (team: 'timeA' | 'timeB', goalIndex: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      [team]: {
+        ...prev[team],
+        gols: prev[team].gols.filter((_, index) => index !== goalIndex),
+      },
+    }));
+  };
+
+  const removeCard = (team: 'timeA' | 'timeB', cardIndex: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      [team]: {
+        ...prev[team],
+        cartoes: prev[team].cartoes.filter((_, index) => index !== cardIndex),
+      },
+    }));
+  };
+
+
   return (
     <form onSubmit={handleSubmit} className='space-y-6'>
       {/* Basic Match Info */}
@@ -291,9 +384,12 @@ export function MatchForm({ match, onSuccess }: MatchFormProps) {
         {(['timeA', 'timeB'] as const).map((team, index) => (
           <Card key={team}>
             <CardHeader>
-              <CardTitle className='flex items-center gap-2'>
-                <Users className='h-5 w-5' />
-                Time {index === 0 ? 'A' : 'B'}
+              <CardTitle className='flex items-center justify-between'>
+                <div className="flex items-center gap-2">
+                  <Users className='h-5 w-5' />
+                  Time {index === 0 ? 'A' : 'B'}
+                </div>
+                <Badge variant="secondary">{placar[team]} Gols</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent className='space-y-4'>
@@ -324,10 +420,10 @@ export function MatchForm({ match, onSuccess }: MatchFormProps) {
                   </SelectTrigger>
                   <SelectContent>
                     {players
-                      .filter((p) => p.status === 'ativo')
                       .filter(
                         (p) =>
-                          !formData[team].jogadores.some((j) => j.cpf === p.cpf)
+                          !formData.timeA.jogadores.some((j) => j.cpf === p.cpf) &&
+                          !formData.timeB.jogadores.some((j) => j.cpf === p.cpf)
                       )
                       .map((player) => (
                         <SelectItem key={player.cpf} value={player.cpf}>
@@ -339,8 +435,8 @@ export function MatchForm({ match, onSuccess }: MatchFormProps) {
                 </Select>
               </div>
 
-              <ScrollArea className='h-32'>
-                <div className='space-y-2'>
+              <ScrollArea className='h-40 border rounded-md'>
+                <div className='p-2 space-y-2'>
                   {formData[team].jogadores.map((player) => (
                     <div
                       key={player.cpf}
@@ -349,14 +445,35 @@ export function MatchForm({ match, onSuccess }: MatchFormProps) {
                       <span className='text-sm'>
                         {player.nome} {player.numero ? `#${player.numero}` : ''}
                       </span>
-                      <Button
-                        type='button'
-                        variant='ghost'
-                        size='sm'
-                        onClick={() => removePlayerFromTeam(team, player.cpf)}
-                      >
-                        <Minus className='h-4 w-4' />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button type="button" variant="outline" size="sm">
+                              <PlusCircle className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Adicionar Evento</DialogTitle>
+                            </DialogHeader>
+                            <AddEventForm 
+                              player={player} 
+                              team={team} 
+                              addGoal={addGoal} 
+                              addCard={addCard} 
+                              onFinished={() => {}}
+                            />
+                          </DialogContent>
+                        </Dialog>
+                        <Button
+                          type='button'
+                          variant='ghost'
+                          size='sm'
+                          onClick={() => removePlayerFromTeam(team, player.cpf)}
+                        >
+                          <Minus className='h-4 w-4 text-destructive' />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -371,8 +488,11 @@ export function MatchForm({ match, onSuccess }: MatchFormProps) {
                 </Label>
                 <div className='flex flex-wrap gap-1 mt-2'>
                   {formData[team].gols.map((gol, idx) => (
-                    <Badge key={idx} variant='secondary' className='text-xs'>
-                      {gol.jogadorNome} ({gol.minuto}')
+                    <Badge key={idx} variant='secondary' className='text-xs flex items-center gap-1'>
+                      <span>{gol.jogadorNome} ({gol.minuto}')</span>
+                      <button type="button" onClick={() => removeGoal(team, idx)} className="ml-1 p-0.5 rounded-full hover:bg-black/20">
+                        <Minus className="h-3 w-3" />
+                      </button>
                     </Badge>
                   ))}
                 </div>
@@ -388,11 +508,14 @@ export function MatchForm({ match, onSuccess }: MatchFormProps) {
                     <Badge
                       key={idx}
                       variant={
-                        cartao.tipo === 'vermelho' ? 'destructive' : 'secondary'
+                        cartao.tipo === 'vermelho' ? 'destructive' : 'default'
                       }
-                      className='text-xs'
+                      className='text-xs flex items-center gap-1'
                     >
-                      {cartao.jogadorNome} ({cartao.minuto}')
+                      <span>{cartao.jogadorNome} ({cartao.minuto}')</span>
+                      <button type="button" onClick={() => removeCard(team, idx)} className="ml-1 p-0.5 rounded-full hover:bg-black/20">
+                        <Minus className="h-3 w-3" />
+                      </button>
                     </Badge>
                   ))}
                 </div>
